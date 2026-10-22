@@ -3,9 +3,12 @@ export interface Point {
   y: number;
 }
 
-/** Texture size by input type: 2048x1024 on desktop, 1024x512 on touch devices. */
-export function textureSizeFor(coarsePointer: boolean): { width: number; height: number } {
-  return coarsePointer ? { width: 1024, height: 512 } : { width: 2048, height: 1024 };
+/**
+ * Texture size by input type: 2048x1024 on desktop, 1024x512 on touch devices. A high-density touch screen (any current phone) gets the full size too,
+ * since the pumpkin fills a lot of device pixels and the smaller texture shows as soft, blurry paint.
+ */
+export function textureSizeFor(coarsePointer: boolean, pixelRatio = 1): { width: number; height: number } {
+  return coarsePointer && pixelRatio < 2 ? { width: 1024, height: 512 } : { width: 2048, height: 1024 };
 }
 
 /** UV to canvas pixels. CanvasTexture flips Y, so v = 1 (north pole) is the top row. */

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { button, canvas, expectNoErrors, openStudio, shot } from "./helpers";
 
-test("touch devices get the 1024x512 textures and the same draw-call budget", async ({ page }) => {
+test("high-density touch devices get the full-size textures and the same draw-call budget", async ({ page }) => {
   const errors = await openStudio(page);
   const stats = await page.evaluate(() => window.__pumpkin!.stats());
-  expect(stats.textureWidth).toBe(1024);
-  expect(stats.textureHeight).toBe(512);
+  expect(stats.textureWidth).toBe(2048);
+  expect(stats.textureHeight).toBe(1024);
   expect(stats.drawCalls).toBe(6);
   await expectNoErrors(errors);
 });

@@ -7,7 +7,7 @@ import { CanvasMirror } from "./textures";
 import { type Rect, type TileLayer, TileHistory } from "./undo";
 
 export interface EngineOptions {
-  /** Pixel size of the paint textures. Defaults by pointer type: 2048x1024 desktop, 1024x512 touch. */
+  /** Pixel size of the paint textures. Defaults by pointer type and density (see `textureSizeFor`): 2048x1024, or 1024x512 on a low-density touch screen. */
   width?: number;
   height?: number;
   baseColor: string;
@@ -61,7 +61,8 @@ export class PaintEngine {
   private historyListener: ((canUndo: boolean, canRedo: boolean) => void) | null = null;
 
   constructor(opts: EngineOptions) {
-    const size = textureSizeFor(window.matchMedia?.("(pointer: coarse)").matches ?? false);
+    const coarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    const size = textureSizeFor(coarse, window.devicePixelRatio || 1);
     this.width = opts.width ?? size.width;
     this.height = opts.height ?? size.height;
     this.baseColor = opts.baseColor;
@@ -81,7 +82,7 @@ export class PaintEngine {
     this.mirrors = mirrors;
     [this.colorTexture, this.heightTexture, this.roughnessTexture] = mirrors.map((m) => m.texture);
 
-    const touchDevice = this.width < 2048;
+    const touchDevice = coarse; // phones keep a smaller undo budget whatever the texture size
     this.history = new TileHistory(
       [canvasLayer(this.colorCtx), canvasLayer(this.heightCtx), canvasLayer(this.roughCtx)],
       this.width,

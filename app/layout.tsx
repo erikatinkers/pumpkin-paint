@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Patrick_Hand } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import "./globals.css";
+import WobbleTuner from "@/components/ui/WobbleTuner";
 
-const hand = Patrick_Hand({ weight: "400", subsets: ["latin"], variable: "--font-hand", display: "swap" });
+const hand = Cabin_Sketch({ weight: "400", subsets: ["latin"], variable: "--font-hand", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Pumpkin Paint Studio",
@@ -20,15 +21,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <filter id="wobble" x="-10%" y="-5%" width="130%" height="115%">
             <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="1" seed="3" result="n" />
             <feDisplacementMap in="SourceGraphic" in2="n" scale="5" result="d" />
-            {/* The displacement moves whole pixels, which stair-steps the edges at 1x; a touch of blur anti-aliases them. */}
-            <feGaussianBlur in="d" stdDeviation="0.55" />
+            {/* The displacement moves whole pixels, which stair-steps the edges at 1x; a touch of blur anti-aliases them (WobbleTuner turns it off on high-density screens). */}
+            <feGaussianBlur id="wobble-blur" in="d" stdDeviation="0.55" />
           </filter>
           <filter id="wobble-sm" x="-8%" y="-8%" width="116%" height="116%">
             <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="1" seed="8" result="n" />
             <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" result="d" />
-            <feGaussianBlur in="d" stdDeviation="0.5" />
+            <feGaussianBlur id="wobble-sm-blur" in="d" stdDeviation="0.5" />
           </filter>
         </svg>
+        <WobbleTuner />
         {children}
       </body>
     </html>

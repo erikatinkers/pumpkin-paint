@@ -92,33 +92,38 @@ button, input { text-transform: inherit; letter-spacing: inherit; }
   filter: url(#wobble);
 }
 
-/* Tool keys: white paper squares with an ink outline. The chosen one is washed in blue. */
+/* Tool keys: white paper squares with an ink outline. The chosen one is washed in blue. The face is a pseudo-element run through the wobble filter,
+   so the outline looks drawn while the icon and label stay crisp: the filter pixelates anything it touches, text most of all. */
 .keys { display: grid; gap: 12px; }
 .key {
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   width: 100%; aspect-ratio: 9 / 8; padding: 0; cursor: pointer;
   font: inherit; font-size: 15px; letter-spacing: 0.08em; color: var(--ink);
+  background: none; border: 0;
+}
+.key::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background-color: var(--white); background-image: var(--grain); background-blend-mode: multiply;
   border: 3px solid var(--ink); border-radius: 6px 8px 5px 9px;
   filter: url(#wobble-sm);
 }
-.key:nth-child(2n) { border-radius: 8px 5px 9px 6px; }
-.key:nth-child(3n) { border-radius: 5px 9px 6px 8px; }
+.key:nth-child(2n)::before { border-radius: 8px 5px 9px 6px; }
+.key:nth-child(3n)::before { border-radius: 5px 9px 6px 8px; }
 .key-icon { display: grid; place-items: center; }
 .key-icon svg { width: 34px; height: 34px; }
 .key-label { line-height: 1; }
 /* Keys stand up off the window on a hard ink edge, like keyboard keys. Pressed (or chosen) they sit flat: the key drops onto its shadow
-   and the face goes inset. Instant, never animated: the keys sit behind a wobble filter, so animating them flickers. */
-.key { box-shadow: 4px 5px 0 var(--ink), inset 0 3px 0 rgba(255, 255, 255, 0.8); }
-.key:hover:not(:disabled) { background-color: #fff3da; }
-.key:active:not(:disabled), .key[aria-pressed="true"] {
-  translate: 4px 5px; box-shadow: 0 0 0 var(--ink), inset 3px 4px 0 rgba(42, 29, 26, 0.28);
-}
-.key:active:not(:disabled) { background-color: #e3d6b9; }
-.key[aria-pressed="true"], .key[aria-pressed="true"]:hover, .key[aria-pressed="true"]:active { background-color: var(--chosen); }
+   and the face goes inset. Instant, never animated: the faces sit behind a wobble filter, so animating them flickers. */
+.key::before { box-shadow: 4px 5px 0 var(--ink), inset 0 3px 0 rgba(255, 255, 255, 0.8); }
+.key:hover:not(:disabled)::before { background-color: #fff3da; }
+.key:active:not(:disabled), .key[aria-pressed="true"] { translate: 4px 5px; }
+.key:active:not(:disabled)::before, .key[aria-pressed="true"]::before { box-shadow: 0 0 0 var(--ink), inset 3px 4px 0 rgba(42, 29, 26, 0.28); }
+.key:active:not(:disabled)::before { background-color: #e3d6b9; }
+.key[aria-pressed="true"]::before, .key[aria-pressed="true"]:hover::before, .key[aria-pressed="true"]:active::before { background-color: var(--chosen); }
 /* The armed Clear key stays red when hovered and while pressed, so the warning doesn't drop away at the moment of the second press. */
-.key[data-tone="red"], .key[data-tone="red"]:hover:not(:disabled), .key[data-tone="red"]:active:not(:disabled) { background-color: var(--alert); }
-.key:disabled { cursor: default; opacity: 0.45; box-shadow: 2px 3px 0 var(--ink); }
+.key[data-tone="red"]::before, .key[data-tone="red"]:hover:not(:disabled)::before, .key[data-tone="red"]:active:not(:disabled)::before { background-color: var(--alert); }
+.key:disabled { cursor: default; opacity: 0.45; }
+.key:disabled::before { box-shadow: 2px 3px 0 var(--ink); }
 .key:focus-visible { outline: 3px dashed var(--ink); outline-offset: 4px; }
 
 .swatches { display: grid; grid-template-columns: repeat(2, 1fr); justify-items: center; gap: 13px; }
@@ -179,7 +184,7 @@ input[type="range"]:focus-visible { outline: 3px dashed var(--ink); outline-offs
   .rail .keys { display: flex; gap: 6px; }
   .rail .keys:first-child { flex: 3; }
   .rail .keys:last-child { flex: 3; }
-  .rail .key { flex: 1; min-width: 0; width: auto; font-size: 11px; gap: 3px; }
+  .rail .key { flex: 1; min-width: 0; width: auto; font-size: 9px; letter-spacing: 0; gap: 3px; }
   .rail .key-icon svg { width: 24px; height: 24px; }
   .panel { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; width: auto; max-height: 38dvh; }
   .panel .window-body { padding: 12px; gap: 10px; }
@@ -225,17 +230,23 @@ input[type="range"]:focus-visible { outline: 3px dashed var(--ink); outline-offs
 .cam-grille { width: 120px; height: 18px; border: 3px solid var(--ink); border-radius: 4px; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 9px); }
 .cam-led { width: 14px; height: 14px; border: 3px solid var(--ink); border-radius: 50%; background: var(--red); }
 .cam-bottom { gap: 0; }
-.cam-bottom .cam-exit { position: absolute; left: 28px; top: 50%; margin-top: -22px; width: 104px; height: 44px; aspect-ratio: auto; border-radius: 22px 20px 23px 21px; }
+.cam-bottom .cam-exit { position: absolute; left: 28px; top: 50%; margin-top: -22px; width: 104px; height: 44px; aspect-ratio: auto; }
+.cam-bottom .cam-exit::before { border-radius: 22px 20px 23px 21px; }
 .cam-hint { position: absolute; right: 28px; top: 50%; margin-top: -9px; font-size: 13px; color: var(--muted); }
 /* The shutter is a big round key, like the keys: stands on an ink edge, drops flat when pressed. */
 .shutter {
-  position: relative; width: 84px; height: 84px; padding: 0; display: grid; place-items: center; cursor: pointer; color: var(--ink);
+  position: relative; isolation: isolate; width: 84px; height: 84px; padding: 0; display: grid; place-items: center; cursor: pointer; color: var(--ink);
+  background: none; border: 0;
+}
+.shutter::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background-color: var(--red); background-image: var(--grain); background-blend-mode: multiply;
   border: 4px solid var(--ink); border-radius: 50%; box-shadow: 4px 5px 0 var(--ink), inset 0 4px 0 rgba(255, 255, 255, 0.55);
   filter: url(#wobble-sm);
 }
 .shutter svg { width: 40px; height: 40px; }
-.shutter:active { translate: 4px 5px; box-shadow: 0 0 0 var(--ink), inset 3px 4px 0 rgba(42, 29, 26, 0.28); }
+.shutter:active { translate: 4px 5px; }
+.shutter:active::before { box-shadow: 0 0 0 var(--ink), inset 3px 4px 0 rgba(42, 29, 26, 0.28); }
 .shutter:focus-visible { outline: 3px dashed var(--ink); outline-offset: 5px; }
 .cam-flash { position: absolute; inset: 0; background: #fffdf7; animation: cam-flash 260ms ease-out forwards; }
 @keyframes cam-flash { from { opacity: 0.95; } to { opacity: 0; } }

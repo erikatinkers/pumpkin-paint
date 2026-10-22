@@ -49,8 +49,13 @@ describe("uv and texture size", () => {
     expect(uvToPixel(0.5, 1, 2048, 1024)).toEqual({ x: 1024, y: 0 });
     expect(uvToPixel(0, 0, 2048, 1024)).toEqual({ x: 0, y: 1024 });
   });
-  it("uses 2048x1024 on desktop and 1024x512 on touch", () => {
+  it("uses 2048x1024 on desktop and 1024x512 on low-density touch screens", () => {
     expect(textureSizeFor(false)).toEqual({ width: 2048, height: 1024 });
     expect(textureSizeFor(true)).toEqual({ width: 1024, height: 512 });
+    expect(textureSizeFor(true, 1.5)).toEqual({ width: 1024, height: 512 });
+  });
+  it("gives high-density touch screens the full size, so paint is not blurry", () => {
+    expect(textureSizeFor(true, 2)).toEqual({ width: 2048, height: 1024 });
+    expect(textureSizeFor(true, 3)).toEqual({ width: 2048, height: 1024 });
   });
 });
