@@ -61,13 +61,13 @@ export default function PumpkinScene() {
       gl={{ antialias: !coarse, alpha: true, powerPreference: "high-performance" }}
       style={{ position: "absolute", inset: 0 }}
     >
-      <hemisphereLight args={["#fff3ea", "#bdb0dc", 0.7]} />
-      <directionalLight position={[-3, 4.5, 4]} intensity={1.7} color="#fff1e4" />
+      <hemisphereLight args={["#fff3e6", "#d8b48c", 0.34]} />
+      <directionalLight position={[-3, 4.5, 4]} intensity={2.5} color="#fff1e4" />
       {/* Bright, soft studio environment: big lightformers on a lavender void. */}
-      <Environment resolution={128} environmentIntensity={0.55}>
-        <color attach="background" args={["#d9cff0"]} />
+      <Environment resolution={128} environmentIntensity={0.3}>
+        <color attach="background" args={["#fbeedd"]} />
         <Lightformer form="rect" intensity={2.2} color="#fff4ec" position={[-4, 4, 3]} scale={[8, 5, 1]} />
-        <Lightformer form="rect" intensity={1.2} color="#efe6ff" position={[4, 2, -2]} scale={[6, 4, 1]} />
+        <Lightformer form="rect" intensity={1.2} color="#ffe8d0" position={[4, 2, -2]} scale={[6, 4, 1]} />
         <Lightformer form="ring" intensity={0.8} color="#ffe6d6" position={[0, 6, 0]} scale={5} rotation-x={Math.PI / 2} />
       </Environment>
       <WarmUp />

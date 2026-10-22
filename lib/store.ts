@@ -1,18 +1,18 @@
 import { create } from "zustand";
 
 export const PAINTS = [
-  { name: "Coral", hex: "#f08f84" },
-  { name: "Peach", hex: "#f6b48f" },
-  { name: "Butter", hex: "#f6e19a" },
-  { name: "Sage", hex: "#a8cf9b" },
-  { name: "Mint", hex: "#a6e0cc" },
-  { name: "Baby blue", hex: "#a9d3ee" },
-  { name: "Periwinkle", hex: "#9fa9e8" },
-  { name: "Lavender", hex: "#c3a9e6" },
-  { name: "Rosy", hex: "#f2a6c4" },
-  { name: "Cream", hex: "#fbf1de" },
-  { name: "Cocoa", hex: "#a07a68" },
-  { name: "Plum", hex: "#8c6a9c" },
+  { name: "Coral", hex: "#ee5f55" },
+  { name: "Peach", hex: "#f7963f" },
+  { name: "Butter", hex: "#f8cf3a" },
+  { name: "Sage", hex: "#58a944" },
+  { name: "Mint", hex: "#3fc6a0" },
+  { name: "Baby blue", hex: "#4aaee8" },
+  { name: "Periwinkle", hex: "#6577e2" },
+  { name: "Lavender", hex: "#a577e3" },
+  { name: "Rosy", hex: "#ec5f9e" },
+  { name: "Cream", hex: "#fbecc8" },
+  { name: "Cocoa", hex: "#8c5230" },
+  { name: "Plum", hex: "#7b3f97" },
 ] as const;
 
 export type Tool = "paint" | "turn";

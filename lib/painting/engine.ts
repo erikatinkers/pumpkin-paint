@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { type Brush, brushRadius, gray, heightProfile, roughnessForSheen } from "./brush";
 import { CLAY_ROUGHNESS } from "@/lib/clayMaterial";
 import { type Point, interpolateDabs, poleStretch, seamOffsets, textureSizeFor, uvToPixel } from "./strokes";
+import { softenStamp } from "./stamp";
 import { CanvasMirror } from "./textures";
 import { type Rect, type TileLayer, TileHistory } from "./undo";
 
@@ -226,6 +227,10 @@ export class PaintEngine {
         ctx.fillStyle = gray(ring.value);
         this.disc(ctx, stamp.width / 2, stamp.height / 2, qx * ring.radius, qy * ring.radius);
       }
+      // Round off the ring steps and the wall: a clay coil has a soft, pillowy edge, not a cliff.
+      const img = ctx.getImageData(0, 0, stamp.width, stamp.height);
+      softenStamp(img.data, stamp.width, stamp.height, Math.max(1, Math.round(Math.min(qx, qy) / 9)));
+      ctx.putImageData(img, 0, 0);
       this.stamps.set(key, stamp);
     }
     return stamp;

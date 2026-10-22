@@ -34,11 +34,11 @@ export function smoothSeams(geo: THREE.BufferGeometry): void {
 }
 
 /**
- * Chubby hand-pressed pumpkin: 9 soft ribs, a slight wobble, dimpled poles.
+ * Chubby hand-pressed pumpkin: 9 plump lobes with crisp grooves between them, a slight wobble, dimpled poles.
  * Every displacement is periodic in u (integer frequencies of the azimuth), so the UV seam closes
  * and paint maps cleanly around the body.
  */
-export function createPumpkinGeometry(widthSegs = 160, heightSegs = 112): THREE.SphereGeometry {
+export function createPumpkinGeometry(widthSegs = 256, heightSegs = 112): THREE.SphereGeometry {
   const geo = new THREE.SphereGeometry(1, widthSegs, heightSegs);
   const pos = geo.attributes.position;
   const uv = geo.attributes.uv;
@@ -50,9 +50,11 @@ export function createPumpkinGeometry(widthSegs = 160, heightSegs = 112): THREE.
     const s = Math.sin(theta);
     const polar = Math.min(theta, Math.PI - theta);
 
-    // Soft rounded ribs; each rib is a touch different, like pressed clay.
-    const ribAmp = 0.09 * (1 + 0.18 * Math.sin(2 * phi + 1.3) + 0.1 * Math.sin(3 * phi + 0.4));
-    const rib = 1 + ribAmp * Math.cos(RIBS * phi) * Math.pow(s, 0.7);
+    // Plump lobes separated by narrow, crisp grooves running pole to pole. |sin(RIBS * phi / 2)| is 0 along each groove and 1 down the
+    // middle of each lobe; raising it to a small power flattens the lobe and leaves a tight V at the crease. The seam sits in a groove.
+    const lobe = Math.sqrt(Math.pow(Math.sin((RIBS * phi) / 2), 2) + 0.0002);
+    const depth = 0.23 * (1 + 0.16 * Math.sin(2 * phi + 1.3) + 0.09 * Math.sin(3 * phi + 0.4)) * Math.pow(s, 0.45);
+    const rib = 1 - depth * (1 - Math.pow(lobe, 0.3));
 
     // Chubby belly, plus low-frequency wobble so no edge is perfectly straight.
     const belly = 1 + 0.07 * s * s;
@@ -114,7 +116,7 @@ export function createLeafGeometry(): THREE.SphereGeometry {
   return geo;
 }
 
-/** Low-poly twin of the pumpkin body, same shape function and UVs, used only for pointer raycasts (about 5x fewer triangles). */
+/** Low-poly twin of the pumpkin body, same shape function and UVs, used only for pointer raycasts (about 3x fewer triangles). */
 export function createPumpkinPickGeometry(): THREE.SphereGeometry {
-  return createPumpkinGeometry(72, 48);
+  return createPumpkinGeometry(192, 64);
 }

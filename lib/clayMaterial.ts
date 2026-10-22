@@ -5,14 +5,18 @@ import { addClayGlow } from "@/lib/shaders/clayGlow";
 export const CLAY_ROUGHNESS = 0.93;
 
 /** Dead-matte, powdery pastel clay: near-max roughness, no metalness, almost no specular. */
-export function createClayMaterial(color: string): THREE.MeshStandardMaterial {
+export function createClayMaterial(color: string, detail?: THREE.Texture, plain = false): THREE.MeshStandardMaterial {
   const mat = new THREE.MeshStandardMaterial({
     color,
     roughness: CLAY_ROUGHNESS,
     metalness: 0,
     envMapIntensity: 1,
+    // Stem and leaf: the detail texture doubles as a zero-strength bump map, which switches the bump path on so the detail can feed it.
+    ...(detail && !plain ? { bumpMap: detail, bumpScale: 0 } : {}),
   });
+  if (plain) return mat; // fallback: no shader patches
   addClayGlow(mat);
+  if (detail) addClayDetail(mat, detail, { body: false, cavity: 0 });
   return mat;
 }
 

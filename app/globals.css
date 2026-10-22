@@ -1,14 +1,18 @@
 :root {
-  --bg: #cfc4e6;
-  --clay: #f1ecfa;
-  --clay-edge: #e1d8f1;
-  --ink: #5b4d73;
-  --muted: #8d80a6;
-  --accent: #b69be6;
+  --bg: #ffeace; /* wall */
+  --floor: #e9d4b7;
+  --clay: #ffffff;
+  --clay-edge: #f6e8d3;
+  --bump: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.032' numOctaves='4' seed='5' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' surfaceScale='6' diffuseConstant='1' lighting-color='%23a0a0a0'%3E%3CfeDistantLight azimuth='235' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
+  --marks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%0A%3Cg id='pit'%3E%0A%3Ccircle cx='17' cy='24' r='3.6' fill='rgba(255,225,195,0.4)'/%3E%0A%3Ccircle cx='16.6' cy='23.4' r='3.1' fill='rgba(70,24,6,0.7)'/%3E%0A%3C/g%3E%0A%3Ccircle cx='83' cy='72' r='3.1' fill='rgba(255,225,195,0.4)'/%3E%3Ccircle cx='82.7' cy='71.5' r='2.6' fill='rgba(70,24,6,0.7)'/%3E%0A%3Ccircle cx='72' cy='13' r='2.4' fill='rgba(255,225,195,0.35)'/%3E%3Ccircle cx='71.8' cy='12.7' r='2' fill='rgba(70,24,6,0.65)'/%3E%0A%3Cg stroke-linecap='round' fill='none'%3E%0A%3Cpath d='M80 18l6 -9M85 21l6 -9M90 24l5 -8' stroke='rgba(255,225,195,0.35)' stroke-width='2.6'/%3E%0A%3Cpath d='M80 17l6 -9M85 20l6 -9M90 23l5 -8' stroke='rgba(70,24,6,0.65)' stroke-width='1.9'/%3E%0A%3C/g%3E%0A%3Ccircle cx='21' cy='80' r='8' fill='rgba(70,24,6,0.16)' stroke='rgba(255,225,195,0.35)' stroke-width='1.4'/%3E%0A%3Cpath d='M14.5 83.5A8 8 0 0 1 27 75' fill='none' stroke='rgba(70,24,6,0.35)' stroke-width='1.6' stroke-linecap='round'/%3E%0A%3C/svg%3E");
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.38 0 0 0 0 0.22 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --ink: #5a3f2d;
+  --muted: #a68b6b;
+  --accent: #ee7a2a;
   --accent-ink: #ffffff;
-  --shade: rgba(120, 100, 160, 0.28);
+  --shade: rgba(150, 105, 60, 0.24);
   --hi: rgba(255, 255, 255, 0.85);
-  --lo: rgba(150, 130, 190, 0.2);
+  --lo: rgba(190, 145, 95, 0.2);
   color-scheme: light;
 }
 html, body { height: 100%; margin: 0; }
@@ -17,96 +21,177 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-fredoka), "Nunito", ui-rounded, system-ui, sans-serif;
-  padding: env(safe-area-inset-top, 0px) max(14px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(14px, env(safe-area-inset-left, 0px));
   box-sizing: border-box;
   overscroll-behavior: none; /* no pull-to-refresh while painting */
 }
 * { box-sizing: border-box; }
 h2, p { margin: 0; }
 
-.app { height: 100%; height: 100dvh; padding-block: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; }
+/* The scene fills the window; the tool rail and color panel float on top of it. */
+.app { position: fixed; inset: 0; overflow: hidden; }
 
-/* Dusty lavender tabletop, lit softly from above. */
+/* A cream wall over a tan floor, lit softly from above. The pumpkin's baked contact shadow sits on the floor. */
 .stage {
-  position: relative; min-height: 0; border-radius: 30px; overflow: hidden;
-  background:
-    radial-gradient(70% 60% at 50% 46%, #e1d8f3 0%, #cdc1e6 55%, #b9abd8 100%);
-  box-shadow: inset 0 3px 0 var(--hi), inset 0 -8px 18px var(--lo), 0 10px 24px var(--shade);
+  position: absolute; inset: 0; overflow: hidden;
+  background: linear-gradient(to bottom, var(--bg) 0 57%, var(--floor) 57% 100%);
 }
 
-/* Matte lavender-white clay card. */
-.panel {
-  min-height: 0; overflow: auto; padding: 20px; border-radius: 30px;
-  display: flex; flex-direction: column; gap: 16px;
-  background: var(--clay);
-  box-shadow: inset 0 3px 0 var(--hi), inset 0 -6px 14px var(--lo), 0 10px 24px var(--shade);
+/* Everything below is pressed from the same matte clay: thick soft bevels, a bright lip on top, a roll-off underneath, a fine grain. */
+
+/* Raised clay trays. */
+.float {
+  position: absolute; z-index: 2; padding: 16px; border-radius: 38px;
+  background-color: #fffaf2; background-image: var(--grain); background-blend-mode: multiply;
+  box-shadow:
+    inset 0 7px 5px rgba(255, 255, 255, 0.95),
+    inset 0 -10px 14px rgba(205, 150, 90, 0.2),
+    0 24px 40px var(--shade),
+    0 3px 5px rgba(150, 100, 50, 0.16);
 }
-.panel h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.panel label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+.rail {
+  top: max(56px, calc(env(safe-area-inset-top) + 16px)); left: max(28px, env(safe-area-inset-left));
+  width: 124px; max-height: calc(100dvh - 112px); overflow: auto;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.panel {
+  top: max(56px, calc(env(safe-area-inset-top) + 16px)); right: max(28px, env(safe-area-inset-right));
+  width: 288px; max-height: calc(100dvh - 112px); overflow: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.panel h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: -4px; }
+.panel label { display: grid; gap: 8px; font-size: 14px; font-weight: 500; }
 .panel small { color: var(--muted); }
 
+/* Recessed wells the controls sit in, pressed into the tray. */
+.well {
+  display: grid; gap: 14px; padding: 14px; border-radius: 26px;
+  background-color: var(--clay-edge); background-image: var(--grain); background-blend-mode: multiply;
+  box-shadow: inset 0 6px 8px rgba(150, 100, 50, 0.2), inset 0 -2px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* Clay keys: thick terracotta slabs, hand-cut and slightly lumpy, with pits and scratches pressed in and cream clay lettering raised on top. */
+.keys { display: grid; gap: 14px; }
+.key {
+  --c: #cf744b; --side: #9c5333; --shade-c: rgba(80, 25, 0, 0.42); --ink-c: #f7ecd2;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 34% 30% 33% 31% / 31% 34% 30% 33%; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink-c);
+  background-color: var(--c);
+  background-image: radial-gradient(circle at 30% 24%, rgba(255, 225, 190, 0.34), transparent 58%), var(--bump), var(--grain);
+  background-blend-mode: normal, soft-light, multiply;
+  box-shadow:
+    inset 3px 4px 4px rgba(255, 215, 175, 0.5),
+    inset -4px -6px 8px var(--shade-c),
+    0 7px 0 var(--side),
+    0 13px 14px rgba(90, 40, 10, 0.34),
+    0 3px 4px rgba(90, 40, 10, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.key:nth-child(2n) { border-radius: 31% 34% 30% 33% / 33% 30% 34% 31%; }
+.key:nth-child(3n) { border-radius: 33% 31% 34% 30% / 30% 33% 31% 34%; }
+/* Pits, scratches and a shallow thumb-dent, pressed into the face; flipped on alternate keys so no two match. */
+.key::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: var(--marks) center / 100% 100% no-repeat;
+}
+.key:nth-child(2n)::before { transform: scaleX(-1); }
+.key:nth-child(3n)::before { transform: scale(-1, -1); }
+.key-icon, .key-label { position: relative; }
+.key-icon { display: grid; place-items: center; }
+/* Raised cream coil: stacked shadows give the extrusion, then a soft contact shadow on the slab. */
+.key-icon svg {
+  width: 32px; height: 32px;
+  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.55)) drop-shadow(0 2px 0 #cdb887) drop-shadow(0 4px 3px rgba(70, 25, 0, 0.5));
+}
+.key-label {
+  line-height: 1;
+  text-shadow: 0 -1px 0 rgba(255, 255, 255, 0.6), 0 1px 0 #d9c69b, 0 2px 0 #cdb887, 0 4px 3px rgba(70, 25, 0, 0.5);
+}
+.key:hover:not(:disabled) { transform: translateY(-1px); }
+.key:active:not(:disabled), .key[aria-pressed="true"] {
+  transform: translateY(5px);
+  box-shadow:
+    inset 3px 4px 4px rgba(255, 215, 175, 0.4),
+    inset -4px -6px 8px var(--shade-c),
+    0 2px 0 var(--side),
+    0 5px 7px rgba(90, 40, 10, 0.3);
+}
+.key[aria-pressed="true"] { --c: #ee7a2a; --side: #b9551a; --shade-c: rgba(140, 45, 0, 0.45); }
+.key[data-tone="red"] { --c: #de4a3d; --side: #a52c24; --shade-c: rgba(110, 10, 10, 0.45); }
+.key:disabled { cursor: default; opacity: 0.55; transform: translateY(3px); box-shadow: inset 3px 4px 4px rgba(255, 215, 175, 0.4), inset -4px -6px 8px var(--shade-c), 0 3px 0 var(--side); }
+.key:disabled .key-icon svg, .key:disabled .key-label { filter: none; text-shadow: none; }
+.key:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+
 .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-/* Pastel "dollops": slightly lumpy blobs of clay. */
+/* Clay dollops: fat, slightly lumpy blobs. */
 .dollop {
   aspect-ratio: 1; cursor: pointer; border: 0; padding: 0;
   border-radius: 52% 48% 50% 50% / 50% 52% 48% 50%;
-  box-shadow: inset 0 3px 3px var(--hi), inset 0 -5px 7px rgba(90, 70, 120, 0.2), 0 3px 5px var(--shade);
+  background-image: var(--bump), var(--grain); background-blend-mode: soft-light, multiply;
+  box-shadow: inset 2px 4px 4px rgba(255, 255, 255, 0.55), inset -3px -6px 8px rgba(60, 20, 0, 0.3), 0 5px 0 rgba(60, 20, 0, 0.18), 0 9px 10px var(--shade);
   transition: transform 0.12s ease;
 }
 .dollop:nth-child(3n) { border-radius: 48% 52% 47% 53% / 53% 48% 52% 47%; }
 .dollop:nth-child(3n + 1) { border-radius: 50% 50% 53% 47% / 47% 53% 47% 53%; }
 .dollop:hover { transform: scale(1.06); }
-.dollop[aria-checked="true"] { outline: 4px solid var(--accent); outline-offset: 2px; transform: scale(1.04); }
-.dollop:focus-visible { outline: 4px solid var(--ink); outline-offset: 2px; }
+.dollop[aria-checked="true"] { outline: 4px solid var(--accent); outline-offset: 3px; transform: scale(1.04); }
+.dollop:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
 
-/* Chunky pill buttons with inset shading. */
-.pills { display: flex; gap: 8px; }
-.pill {
-  flex: 1; cursor: pointer; border: 0; border-radius: 999px; padding: 11px 16px;
-  font: inherit; font-weight: 600; font-size: 15px; color: var(--ink); background: var(--clay-edge);
-  box-shadow: inset 0 3px 2px var(--hi), inset 0 -4px 6px var(--lo), 0 3px 5px var(--shade);
-}
-.pill:active, .pill[aria-pressed="true"] {
-  background: var(--accent); color: var(--accent-ink);
-  box-shadow: inset 0 4px 7px rgba(80, 55, 130, 0.35), inset 0 -2px 3px rgba(255, 255, 255, 0.25);
-}
-.pill:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
-
-input[type="range"] { width: 100%; accent-color: var(--accent); }
 input[type="color"] {
-  width: 100%; height: 38px; border: 0; padding: 4px; border-radius: 999px; cursor: pointer; background: var(--clay-edge);
-  box-shadow: inset 0 3px 2px var(--hi), inset 0 -4px 6px var(--lo), 0 3px 5px var(--shade);
+  width: 100%; height: 42px; border: 0; padding: 5px; border-radius: 999px; cursor: pointer;
+  background-color: #fff3e2;
+  box-shadow: inset 0 4px 3px rgba(255, 255, 255, 0.85), inset 0 -5px 7px rgba(205, 150, 90, 0.28), 0 5px 8px var(--shade);
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 999px; }
+input[type="color"]::-moz-color-swatch { border: 0; border-radius: 999px; }
+
+/* Clay slider: a pressed groove with a fat clay bead. */
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; accent-color: var(--accent); }
+input[type="range"]::-webkit-slider-runnable-track { height: 14px; border-radius: 999px; background: #efdcc2; box-shadow: inset 0 4px 5px rgba(150, 100, 50, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.9); }
+input[type="range"]::-moz-range-track { height: 14px; border-radius: 999px; background: #efdcc2; box-shadow: inset 0 4px 5px rgba(150, 100, 50, 0.3); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 28px; height: 28px; margin-top: -7px; border-radius: 50%; border: 0; background-color: var(--accent); background-image: var(--bump); background-blend-mode: soft-light;
+  box-shadow: inset 0 4px 3px rgba(255, 255, 255, 0.55), inset 0 -5px 6px rgba(150, 50, 0, 0.4), 0 4px 6px var(--shade);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 28px; height: 28px; border-radius: 50%; border: 0; background-color: var(--accent); background-image: var(--bump); background-blend-mode: soft-light;
+  box-shadow: inset 0 4px 3px rgba(255, 255, 255, 0.55), inset 0 -5px 6px rgba(150, 50, 0, 0.4), 0 4px 6px var(--shade);
 }
 
 @media (max-width: 760px) {
-  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 10px; }
-  .panel { max-height: 44dvh; padding: 14px; gap: 12px; border-radius: 26px; }
-  .stage { border-radius: 26px; }
+  /* Phone: tools become a bar across the top, colors a sheet along the bottom. */
+  .rail {
+    top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; width: auto; max-height: none; overflow: visible;
+    flex-direction: row; padding: 10px; border-radius: 30px; gap: 8px;
+  }
+  .rail .keys { display: flex; gap: 6px; }
+  .rail .keys:first-child { flex: 2; }
+  .rail .keys:last-child { flex: 3; }
+  .rail .key { flex: 1; min-width: 0; width: auto; font-size: 10.5px; gap: 3px; box-shadow: inset 2px 3px 3px rgba(255, 215, 175, 0.5), inset -3px -4px 6px var(--shade-c), 0 5px 0 var(--side), 0 9px 10px rgba(90, 40, 10, 0.3); }
+  .rail .key-icon svg { width: 22px; height: 22px; }
+  .panel {
+    top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; width: auto;
+    max-height: 38dvh; padding: 14px; gap: 10px; border-radius: 30px;
+  }
+  .well { padding: 12px; gap: 12px; border-radius: 22px; }
   .swatches { grid-template-columns: repeat(6, 1fr); gap: 10px; }
-  .pill { padding: 12px 10px; }
 }
 
 /* Fingers need bigger targets, and nothing on the stage should select text or pop a callout. */
 .stage { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 @media (pointer: coarse) {
-  input[type="range"] { height: 30px; }
+  input[type="range"] { height: 32px; }
   input[type="range"]::-webkit-slider-thumb { width: 32px; height: 32px; margin-top: -9px; }
   input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; }
-  input[type="color"] { height: 44px; }
+  input[type="color"] { height: 46px; }
 }
-
-/* Chunky clay slider: a pressed groove with a round thumb. */
-input[type="range"] { -webkit-appearance: none; appearance: none; height: 16px; background: transparent; }
-input[type="range"]::-webkit-slider-runnable-track { height: 14px; border-radius: 999px; background: var(--clay-edge); box-shadow: inset 0 3px 4px var(--lo), inset 0 -1px 0 var(--hi); }
-input[type="range"]::-moz-range-track { height: 14px; border-radius: 999px; background: var(--clay-edge); box-shadow: inset 0 3px 4px var(--lo); }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -6px; border-radius: 50%; border: 0; background: var(--accent); box-shadow: inset 0 3px 2px rgba(255,255,255,.5), inset 0 -4px 5px rgba(80,55,130,.3), 0 3px 5px var(--shade); }
-input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; border: 0; background: var(--accent); box-shadow: inset 0 3px 2px rgba(255,255,255,.5), inset 0 -4px 5px rgba(80,55,130,.3), 0 3px 5px var(--shade); }
-input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 999px; }
-
-.pill:disabled { opacity: 0.45; cursor: default; box-shadow: inset 0 3px 2px var(--hi), inset 0 -4px 6px var(--lo); }
-.pill[data-armed="true"] { background: #f2a6a0; color: #fff; box-shadow: inset 0 4px 7px rgba(140, 50, 50, 0.3), inset 0 -2px 3px rgba(255, 255, 255, 0.25); }
-.pills { flex-wrap: wrap; }
 
 /* Painting and pinch-zoom are handled in JS; stop the browser scrolling or zooming the page. */
 .stage, .stage div, .stage canvas { touch-action: none; }
+
+/* Paper grain under the canvas: the backdrop is a sheet of paper, not a smooth gradient. */
+.stage::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.16; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.45 0 0 0 0 0.25 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

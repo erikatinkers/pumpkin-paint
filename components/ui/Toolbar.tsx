@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { parseDebug } from "@/lib/debug";
 import { paintRegistry } from "@/lib/painting/registry";
 import { useBrush } from "@/lib/store";
+import { ClearIcon, RedoIcon, UndoIcon } from "./icons";
 
 const CONFIRM_MS = 3000;
+const confirmMs = () => parseDebug(window.location.search).confirmMs ?? CONFIRM_MS;
 
 export default function Toolbar() {
   const canUndo = useBrush((s) => s.canUndo);
@@ -14,7 +17,7 @@ export default function Toolbar() {
   // Two-step clear lives in the button: first press arms it, a second press within a few seconds wipes.
   useEffect(() => {
     if (!armed) return;
-    const t = setTimeout(() => setArmed(false), CONFIRM_MS);
+    const t = setTimeout(() => setArmed(false), confirmMs());
     return () => clearTimeout(t);
   }, [armed]);
 
@@ -30,11 +33,18 @@ export default function Toolbar() {
   }, []);
 
   return (
-    <div className="pills" role="group" aria-label="Edit">
-      <button className="pill" disabled={!canUndo} onClick={() => paintRegistry.get()?.undo()}>Undo</button>
-      <button className="pill" disabled={!canRedo} onClick={() => paintRegistry.get()?.redo()}>Redo</button>
+    <div className="keys" role="group" aria-label="Edit">
+      <button className="key" disabled={!canUndo} onClick={() => paintRegistry.get()?.undo()}>
+        <span className="key-icon"><UndoIcon /></span>
+        <span className="key-label">Undo</span>
+      </button>
+      <button className="key" disabled={!canRedo} onClick={() => paintRegistry.get()?.redo()}>
+        <span className="key-icon"><RedoIcon /></span>
+        <span className="key-label">Redo</span>
+      </button>
       <button
-        className="pill"
+        className="key"
+        data-tone={armed ? "red" : undefined}
         data-armed={armed}
         onClick={() => {
           if (!armed) return setArmed(true);
@@ -43,7 +53,8 @@ export default function Toolbar() {
         }}
         onBlur={() => setArmed(false)}
       >
-        {armed ? "Really?" : "Clear"}
+        <span className="key-icon"><ClearIcon /></span>
+        <span className="key-label">{armed ? "Really?" : "Clear"}</span>
       </button>
     </div>
   );

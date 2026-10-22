@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Palette from "@/components/ui/Palette";
+import ToolRail from "@/components/ui/ToolRail";
 
 // WebGL only runs in the browser, so the scene is never rendered on the server.
 const PumpkinScene = dynamic(() => import("@/components/scene/PumpkinScene"), {
@@ -15,6 +16,7 @@ export default function PumpkinStudio() {
       <section className="stage" aria-label="3D pumpkin you can paint">
         <PumpkinScene />
       </section>
+      <ToolRail />
       <Palette />
     </main>
   );

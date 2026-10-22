@@ -8,7 +8,7 @@ const softwareGl = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsaf
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 60_000,
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.03 } },
+  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
   // One baseline per project, not per OS: software GL renders the same pixels everywhere, and we only capture the canvas (no fonts).
   snapshotPathTemplate: "{testDir}/__screenshots__/{projectName}/{arg}{ext}",
   reporter: [["list"], ["html", { open: "never" }]],

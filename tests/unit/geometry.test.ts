@@ -35,4 +35,16 @@ describe("pumpkin geometry", () => {
       for (const v of g.attributes.position.array) expect(Number.isFinite(v)).toBe(true);
     }
   });
+  it("has narrow grooves much deeper than the lobe surface around them", () => {
+    const w = 288; // 32 columns per rib
+    const g = createPumpkinGeometry(w, 56);
+    const pos = g.attributes.position;
+    const row = 28 * (w + 1); // equator row
+    const radius = (col: number) => Math.hypot(pos.getX(row + col), pos.getZ(row + col));
+    const groove = radius(0); // the seam sits in a groove
+    const lobeMid = radius(16);
+    const nearGroove = radius(4); // about an eighth of a rib away
+    expect(groove).toBeLessThan(lobeMid * 0.88);
+    expect(nearGroove).toBeGreaterThan(groove * 1.05); // the crease is narrow: it recovers quickly
+  });
 });
