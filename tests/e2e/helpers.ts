@@ -43,7 +43,7 @@ export const devBadge = (page: Page) => page.locator("nextjs-portal");
 export async function quickShot(page: Page): Promise<Buffer> {
   await nextFrames(page);
   const box = (await canvas(page).boundingBox())!;
-  const clip = { x: box.x + box.width / 2 - 120, y: box.y + box.height / 2 - 90, width: 240, height: 180 };
+  const clip = { x: box.x + box.width / 2 - 220, y: box.y + box.height / 2 - 160, width: 440, height: 320 };
   return page.screenshot({ clip, style: HIDE_UI });
 }
 

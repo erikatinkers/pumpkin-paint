@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8"><title>Squelch demo</title>
+<style>body{font:18px system-ui;padding:32px;background:#f6f0e1;color:#2a1d1a}button{font:inherit;padding:12px 20px;margin:6px;border:3px solid #2a1d1a;border-radius:8px;background:#fffdf7;cursor:pointer}</style>
+<h1>Squelch</h1>
+<p>Same squelch as the brush uses (current settings).</p>
+<button id="one">One squelch</button>
+<button id="slow">Slow stroke (~8 squelches)</button>
+<button id="fast">Fast stroke (~20 squelches)</button>
+<script>
+const c = new AudioContext();
+function blip(at, from, to, len, vol) {
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(from, at);
+  o.frequency.exponentialRampToValueAtTime(to, at + len);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  o.connect(g).connect(c.destination); o.start(at); o.stop(at + len + 0.02);
+}
+function squelch(at, level) {
+  const f = 170 + Math.random() * 260, len = 0.04 + Math.random() * 0.05, up = Math.random() < 0.6;
+  blip(at, up ? f : f * 1.7, up ? f * 1.7 : f, len, 0.025 + level * 0.035);
+}
+function run(n, level) {
+  c.resume(); let t = c.currentTime + 0.05;
+  for (let i = 0; i < n; i++) { squelch(t, level); t += 0.12 + Math.random() * 0.18 - level * 0.05; }
+}
+one.onclick = () => { c.resume(); squelch(c.currentTime + 0.05, 1); };
+slow.onclick = () => run(8, 0.3);
+fast.onclick = () => run(20, 1);
+</script>

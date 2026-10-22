@@ -6,7 +6,7 @@ test("touch devices get the 1024x512 textures and the same draw-call budget", as
   const stats = await page.evaluate(() => window.__pumpkin!.stats());
   expect(stats.textureWidth).toBe(1024);
   expect(stats.textureHeight).toBe(512);
-  expect(stats.drawCalls).toBe(4);
+  expect(stats.drawCalls).toBe(6);
   await expectNoErrors(errors);
 });
 

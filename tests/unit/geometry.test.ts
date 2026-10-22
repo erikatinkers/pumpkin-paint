@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createPumpkinGeometry, createStemGeometry, createLeafGeometry, RIBS } from "@/lib/pumpkinGeometry";
+import { createPumpkinGeometry, createStemGeometry, RIBS } from "@/lib/pumpkinGeometry";
 
 describe("pumpkin geometry", () => {
   it("has the expected number of ribs", () => {
@@ -30,8 +30,8 @@ describe("pumpkin geometry", () => {
     for (let i = 0; i < pos.count; i++) top = Math.max(top, pos.getY(i));
     expect(pos.getY(0)).toBeLessThan(top - 0.05); // vertex 0 is the top pole
   });
-  it("builds stem and leaf with finite vertices", () => {
-    for (const g of [createStemGeometry(), createLeafGeometry()]) {
+  it("builds the stem with finite vertices", () => {
+    for (const g of [createStemGeometry()]) {
       for (const v of g.attributes.position.array) expect(Number.isFinite(v)).toBe(true);
     }
   });

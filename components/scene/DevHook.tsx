@@ -52,7 +52,7 @@ export default function DevHook({ engine }: { engine: PaintEngine }) {
         engine.clear();
         engine.flush();
       },
-      /** Renderer counters for the last frame, plus texture size. Draw calls should be 4: pumpkin, stem, leaf, shadow plane. */
+      /** Renderer counters for the last frame, plus texture size. Draw calls should be 6: pumpkin, stem, shadow plane, top page, ground shadows, notebook body. */
       /** True once the first frames (environment map, textures) have rendered. */
       settled: isSettled,
       stats() {

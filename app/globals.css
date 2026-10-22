@@ -1,197 +1,261 @@
 :root {
-  --bg: #ffeace; /* wall */
-  --floor: #e9d4b7;
-  --clay: #ffffff;
-  --clay-edge: #f6e8d3;
-  --bump: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.032' numOctaves='4' seed='5' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' surfaceScale='6' diffuseConstant='1' lighting-color='%23a0a0a0'%3E%3CfeDistantLight azimuth='235' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
-  --marks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%0A%3Cg id='pit'%3E%0A%3Ccircle cx='17' cy='24' r='3.6' fill='rgba(255,225,195,0.4)'/%3E%0A%3Ccircle cx='16.6' cy='23.4' r='3.1' fill='rgba(70,24,6,0.7)'/%3E%0A%3C/g%3E%0A%3Ccircle cx='83' cy='72' r='3.1' fill='rgba(255,225,195,0.4)'/%3E%3Ccircle cx='82.7' cy='71.5' r='2.6' fill='rgba(70,24,6,0.7)'/%3E%0A%3Ccircle cx='72' cy='13' r='2.4' fill='rgba(255,225,195,0.35)'/%3E%3Ccircle cx='71.8' cy='12.7' r='2' fill='rgba(70,24,6,0.65)'/%3E%0A%3Cg stroke-linecap='round' fill='none'%3E%0A%3Cpath d='M80 18l6 -9M85 21l6 -9M90 24l5 -8' stroke='rgba(255,225,195,0.35)' stroke-width='2.6'/%3E%0A%3Cpath d='M80 17l6 -9M85 20l6 -9M90 23l5 -8' stroke='rgba(70,24,6,0.65)' stroke-width='1.9'/%3E%0A%3C/g%3E%0A%3Ccircle cx='21' cy='80' r='8' fill='rgba(70,24,6,0.16)' stroke='rgba(255,225,195,0.35)' stroke-width='1.4'/%3E%0A%3Cpath d='M14.5 83.5A8 8 0 0 1 27 75' fill='none' stroke='rgba(70,24,6,0.35)' stroke-width='1.6' stroke-linecap='round'/%3E%0A%3C/svg%3E");
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.38 0 0 0 0 0.22 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --ink: #5a3f2d;
-  --muted: #a68b6b;
-  --accent: #ee7a2a;
-  --accent-ink: #ffffff;
-  --shade: rgba(150, 105, 60, 0.24);
-  --hi: rgba(255, 255, 255, 0.85);
-  --lo: rgba(190, 145, 95, 0.2);
+  --paper: #f6f0e1;
+  --white: #fffdf7;
+  --ink: #2a1d1a;
+  --muted: #5d5470;
+  --window: #d6ddd5; /* soft grey-green wash for the window frames */
+  --blue: #8795db;
+  --accent: #f08a2e;
+  --chosen: #e3d6b9; /* the chosen tool's key and a key held down: a darker beige than the raised keys */
+  --red: #e9806f;
+  --alert: #f6a99b; /* the armed Clear key: a lighter coral, so the ink on it keeps its contrast through the paper grain */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' seed='6'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.3 0 0 0 0.45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   color-scheme: light;
 }
 html, body { height: 100%; margin: 0; }
 html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body {
-  background: var(--bg);
+  background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-fredoka), "Nunito", ui-rounded, system-ui, sans-serif;
+  font-family: var(--font-hand), "Comic Sans MS", ui-rounded, system-ui, sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   box-sizing: border-box;
   overscroll-behavior: none; /* no pull-to-refresh while painting */
 }
 * { box-sizing: border-box; }
 h2, p { margin: 0; }
+button, input { text-transform: inherit; letter-spacing: inherit; }
 
 /* The scene fills the window; the tool rail and color panel float on top of it. */
 .app { position: fixed; inset: 0; overflow: hidden; }
 
-/* A cream wall over a tan floor, lit softly from above. The pumpkin's baked contact shadow sits on the floor. */
+/* Paper all round the sketchbook page, with paper tooth over it. The page and everything on it are 3D, in the scene. */
 .stage {
-  position: absolute; inset: 0; overflow: hidden;
-  background: linear-gradient(to bottom, var(--bg) 0 57%, var(--floor) 57% 100%);
+  position: absolute; inset: 0; overflow: hidden; isolation: isolate; background: #f4ecd8;
+}
+.stage::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.2; mix-blend-mode: multiply; background-image: var(--grain);
 }
 
-/* Everything below is pressed from the same matte clay: thick soft bevels, a bright lip on top, a roll-off underneath, a fine grain. */
-
-/* Raised clay trays. */
-.float {
-  position: absolute; z-index: 2; padding: 16px; border-radius: 38px;
-  background-color: #fffaf2; background-image: var(--grain); background-blend-mode: multiply;
-  box-shadow:
-    inset 0 7px 5px rgba(255, 255, 255, 0.95),
-    inset 0 -10px 14px rgba(205, 150, 90, 0.2),
-    0 24px 40px var(--shade),
-    0 3px 5px rgba(150, 100, 50, 0.16);
+/* Hand-inked windows. The frame is a pseudo-element run through the wobble filter, so the border and its fill look drawn while the controls stay crisp. */
+/* The window itself never clips (its ink shadow hangs outside it); only the body scrolls when the window is taller than the screen. */
+.float { position: absolute; z-index: 2; isolation: isolate; display: flex; flex-direction: column; }
+.float::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-color: var(--window); background-image: var(--grain); background-blend-mode: multiply;
+  border: 3px solid var(--ink); border-radius: 7px 5px 8px 5px;
+  /* A bevel, not a shadow: a lit edge along the top and left, a shaded edge along the bottom and right, like a raised slab. */
+  box-shadow: inset 4px 4px 0 rgba(255, 255, 255, 0.72), inset -7px -7px 0 rgba(37, 27, 24, 0.46);
+  filter: url(#wobble);
 }
 .rail {
   top: max(56px, calc(env(safe-area-inset-top) + 16px)); left: max(28px, env(safe-area-inset-left));
-  width: 124px; max-height: calc(100dvh - 112px); overflow: auto;
-  display: flex; flex-direction: column; gap: 14px;
+  width: 144px; max-height: calc(100dvh - 112px);
 }
 .panel {
   top: max(56px, calc(env(safe-area-inset-top) + 16px)); right: max(28px, env(safe-area-inset-right));
-  width: 288px; max-height: calc(100dvh - 112px); overflow: auto; padding: 20px;
-  display: flex; flex-direction: column; gap: 14px;
+  width: 220px; max-height: calc(100dvh - 112px);
 }
-.panel h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: -4px; }
-.panel label { display: grid; gap: 8px; font-size: 14px; font-weight: 500; }
-.panel small { color: var(--muted); }
+.titlebar {
+  display: flex; align-items: center; gap: 6px; padding: 7px 10px 6px; font-size: 12px; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden;
+  border-bottom: 3px solid var(--ink); background: rgba(42, 29, 26, 0.1);
+}
+.titlebar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: clip; text-transform: lowercase; }
+/* The three window buttons: close. Drawn with a border and two rotated bars. */
+.wb { position: relative; flex: none; width: 14px; height: 14px; border: 2.5px solid var(--ink); border-radius: 2px; background: var(--white); }
+.wb { padding: 0; cursor: pointer; }
+.wb-close::before, .wb-close::after { content: ""; position: absolute; left: 50%; top: -2px; width: 2px; height: 14px; margin-left: -1px; background: var(--ink); transform: rotate(45deg); }
+.wb-close::after { transform: rotate(-45deg); }
+/* Extra room on the right and bottom, where the bevel is thick and the keys' ink edge hangs. */
+.window-body { display: flex; flex-direction: column; gap: 14px; padding: 14px 24px 22px 16px; min-height: 0; overflow: auto; }
+.panel .window-body { padding: 16px 24px 24px 18px; }
+.panel h2 { font-size: 15px; font-weight: 400; letter-spacing: 0.14em; margin-bottom: -4px; }
+.panel label { display: grid; gap: 6px; font-size: 16px; }
+.panel small { color: var(--muted); font-size: 13px; }
 
-/* Recessed wells the controls sit in, pressed into the tray. */
+/* With seven keys the rail can outgrow a short window: tighten the keys so it fits, and never show a native scrollbar over the ink frame. */
+.window-body { scrollbar-width: none; }
+.window-body::-webkit-scrollbar { display: none; }
+@media (min-width: 761px) and (max-height: 940px) { .rail .keys { gap: 16px; } .rail .key { aspect-ratio: 9 / 5.6; } .rail .key-icon svg { width: 28px; height: 28px; } .rail .window-body { gap: 16px; } }
+@media (min-width: 761px) and (max-height: 760px) { .rail .keys { gap: 14px; } .rail .key { aspect-ratio: 9 / 5; flex-direction: row; gap: 8px; } .rail .key-icon svg { width: 22px; height: 22px; } .rail .key-label { font-size: 13px; } .rail .window-body { gap: 14px; } }
+
+/* White paper inset the controls sit on, like the character screen in the reference. */
 .well {
-  display: grid; gap: 14px; padding: 14px; border-radius: 26px;
-  background-color: var(--clay-edge); background-image: var(--grain); background-blend-mode: multiply;
-  box-shadow: inset 0 6px 8px rgba(150, 100, 50, 0.2), inset 0 -2px 0 rgba(255, 255, 255, 0.95);
+  position: relative; isolation: isolate; display: grid; gap: 14px; padding: 14px;
+}
+.well::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--white); border: 3px solid var(--ink); border-radius: 4px 6px 4px 7px;
+  box-shadow: inset 4px 4px 0 rgba(42, 29, 26, 0.2), inset -4px -4px 0 rgba(255, 255, 255, 0.9); /* a bevel the other way: pressed into the window */
+  filter: url(#wobble);
 }
 
-/* Clay keys: thick terracotta slabs, hand-cut and slightly lumpy, with pits and scratches pressed in and cream clay lettering raised on top. */
-.keys { display: grid; gap: 14px; }
+/* Tool keys: white paper squares with an ink outline. The chosen one is washed in blue. */
+.keys { display: grid; gap: 12px; }
 .key {
-  --c: #cf744b; --side: #9c5333; --shade-c: rgba(80, 25, 0, 0.42); --ink-c: #f7ecd2;
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-  width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 34% 30% 33% 31% / 31% 34% 30% 33%; cursor: pointer;
-  font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink-c);
-  background-color: var(--c);
-  background-image: radial-gradient(circle at 30% 24%, rgba(255, 225, 190, 0.34), transparent 58%), var(--bump), var(--grain);
-  background-blend-mode: normal, soft-light, multiply;
-  box-shadow:
-    inset 3px 4px 4px rgba(255, 215, 175, 0.5),
-    inset -4px -6px 8px var(--shade-c),
-    0 7px 0 var(--side),
-    0 13px 14px rgba(90, 40, 10, 0.34),
-    0 3px 4px rgba(90, 40, 10, 0.3);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; aspect-ratio: 9 / 8; padding: 0; cursor: pointer;
+  font: inherit; font-size: 15px; letter-spacing: 0.08em; color: var(--ink);
+  background-color: var(--white); background-image: var(--grain); background-blend-mode: multiply;
+  border: 3px solid var(--ink); border-radius: 6px 8px 5px 9px;
+  filter: url(#wobble-sm);
 }
-.key:nth-child(2n) { border-radius: 31% 34% 30% 33% / 33% 30% 34% 31%; }
-.key:nth-child(3n) { border-radius: 33% 31% 34% 30% / 30% 33% 31% 34%; }
-/* Pits, scratches and a shallow thumb-dent, pressed into the face; flipped on alternate keys so no two match. */
-.key::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: var(--marks) center / 100% 100% no-repeat;
-}
-.key:nth-child(2n)::before { transform: scaleX(-1); }
-.key:nth-child(3n)::before { transform: scale(-1, -1); }
-.key-icon, .key-label { position: relative; }
+.key:nth-child(2n) { border-radius: 8px 5px 9px 6px; }
+.key:nth-child(3n) { border-radius: 5px 9px 6px 8px; }
 .key-icon { display: grid; place-items: center; }
-/* Raised cream coil: stacked shadows give the extrusion, then a soft contact shadow on the slab. */
-.key-icon svg {
-  width: 32px; height: 32px;
-  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.55)) drop-shadow(0 2px 0 #cdb887) drop-shadow(0 4px 3px rgba(70, 25, 0, 0.5));
-}
-.key-label {
-  line-height: 1;
-  text-shadow: 0 -1px 0 rgba(255, 255, 255, 0.6), 0 1px 0 #d9c69b, 0 2px 0 #cdb887, 0 4px 3px rgba(70, 25, 0, 0.5);
-}
-.key:hover:not(:disabled) { transform: translateY(-1px); }
+.key-icon svg { width: 34px; height: 34px; }
+.key-label { line-height: 1; }
+/* Keys stand up off the window on a hard ink edge, like keyboard keys. Pressed (or chosen) they sit flat: the key drops onto its shadow
+   and the face goes inset. Instant, never animated: the keys sit behind a wobble filter, so animating them flickers. */
+.key { box-shadow: 4px 5px 0 var(--ink), inset 0 3px 0 rgba(255, 255, 255, 0.8); }
+.key:hover:not(:disabled) { background-color: #fff3da; }
 .key:active:not(:disabled), .key[aria-pressed="true"] {
-  transform: translateY(5px);
-  box-shadow:
-    inset 3px 4px 4px rgba(255, 215, 175, 0.4),
-    inset -4px -6px 8px var(--shade-c),
-    0 2px 0 var(--side),
-    0 5px 7px rgba(90, 40, 10, 0.3);
+  translate: 4px 5px; box-shadow: 0 0 0 var(--ink), inset 3px 4px 0 rgba(42, 29, 26, 0.28);
 }
-.key[aria-pressed="true"] { --c: #ee7a2a; --side: #b9551a; --shade-c: rgba(140, 45, 0, 0.45); }
-.key[data-tone="red"] { --c: #de4a3d; --side: #a52c24; --shade-c: rgba(110, 10, 10, 0.45); }
-.key:disabled { cursor: default; opacity: 0.55; transform: translateY(3px); box-shadow: inset 3px 4px 4px rgba(255, 215, 175, 0.4), inset -4px -6px 8px var(--shade-c), 0 3px 0 var(--side); }
-.key:disabled .key-icon svg, .key:disabled .key-label { filter: none; text-shadow: none; }
-.key:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+.key:active:not(:disabled) { background-color: #e3d6b9; }
+.key[aria-pressed="true"], .key[aria-pressed="true"]:hover, .key[aria-pressed="true"]:active { background-color: var(--chosen); }
+/* The armed Clear key stays red when hovered and while pressed, so the warning doesn't drop away at the moment of the second press. */
+.key[data-tone="red"], .key[data-tone="red"]:hover:not(:disabled), .key[data-tone="red"]:active:not(:disabled) { background-color: var(--alert); }
+.key:disabled { cursor: default; opacity: 0.45; box-shadow: 2px 3px 0 var(--ink); }
+.key:focus-visible { outline: 3px dashed var(--ink); outline-offset: 4px; }
 
-.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-/* Clay dollops: fat, slightly lumpy blobs. */
+.swatches { display: grid; grid-template-columns: repeat(2, 1fr); justify-items: center; gap: 13px; }
+/* The chosen swatch's ring reaches 6px past the dab: leave it room before the well's edge. */
+@media (min-width: 761px) { .swatches { padding: 7px 5px; } }
+/* Dabs of paint: each a wobbly ink-outlined square-ish blot with a pale highlight where the wash is thin. */
 .dollop {
-  aspect-ratio: 1; cursor: pointer; border: 0; padding: 0;
-  border-radius: 52% 48% 50% 50% / 50% 52% 48% 50%;
-  background-image: var(--bump), var(--grain); background-blend-mode: soft-light, multiply;
-  box-shadow: inset 2px 4px 4px rgba(255, 255, 255, 0.55), inset -3px -6px 8px rgba(60, 20, 0, 0.3), 0 5px 0 rgba(60, 20, 0, 0.18), 0 9px 10px var(--shade);
-  transition: transform 0.12s ease;
+  width: 100%; max-width: 58px; aspect-ratio: 1; cursor: pointer; padding: 0;
+  border: 3px solid var(--ink); border-radius: 36% 28% 34% 30% / 30% 36% 28% 34%;
+  background-image: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.5), transparent 55%), var(--grain);
+  background-blend-mode: normal, multiply;
+  filter: url(#wobble-sm);
 }
-.dollop:nth-child(3n) { border-radius: 48% 52% 47% 53% / 53% 48% 52% 47%; }
-.dollop:nth-child(3n + 1) { border-radius: 50% 50% 53% 47% / 47% 53% 47% 53%; }
-.dollop:hover { transform: scale(1.06); }
-.dollop[aria-checked="true"] { outline: 4px solid var(--accent); outline-offset: 3px; transform: scale(1.04); }
-.dollop:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+.dollop:nth-child(3n) { border-radius: 30% 36% 28% 34% / 34% 28% 36% 30%; }
+.dollop:nth-child(3n + 1) { border-radius: 33% 30% 37% 28% / 28% 34% 30% 36%; }
+.dollop:hover { box-shadow: 0 0 0 3px var(--white), 0 0 0 5px var(--ink); }
+.dollop[aria-checked="true"] { box-shadow: 0 0 0 3px var(--white), 0 0 0 6px var(--ink); }
+.dollop:focus-visible { outline: 3px dashed var(--ink); outline-offset: 4px; }
 
 input[type="color"] {
-  width: 100%; height: 42px; border: 0; padding: 5px; border-radius: 999px; cursor: pointer;
-  background-color: #fff3e2;
-  box-shadow: inset 0 4px 3px rgba(255, 255, 255, 0.85), inset 0 -5px 7px rgba(205, 150, 90, 0.28), 0 5px 8px var(--shade);
+  width: 100%; height: 40px; padding: 4px; cursor: pointer;
+  background: var(--white); border: 3px solid var(--ink); border-radius: 5px 7px 5px 8px;
+  filter: url(#wobble-sm);
 }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 999px; }
-input[type="color"]::-moz-color-swatch { border: 0; border-radius: 999px; }
+input[type="color"]::-webkit-color-swatch { border: 2px solid var(--ink); border-radius: 2px; }
+input[type="color"]::-moz-color-swatch { border: 2px solid var(--ink); border-radius: 2px; }
 
-/* Clay slider: a pressed groove with a fat clay bead. */
-input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; accent-color: var(--accent); }
-input[type="range"]::-webkit-slider-runnable-track { height: 14px; border-radius: 999px; background: #efdcc2; box-shadow: inset 0 4px 5px rgba(150, 100, 50, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.9); }
-input[type="range"]::-moz-range-track { height: 14px; border-radius: 999px; background: #efdcc2; box-shadow: inset 0 4px 5px rgba(150, 100, 50, 0.3); }
+/* Sliders: an ink-outlined track filled blue up to the value (--v, set from the component) with a round hand-drawn knob. */
+input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 30px; margin: 0; cursor: pointer;
+  background: transparent; filter: url(#wobble-sm);
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 14px; border: 3px solid var(--ink); border-radius: 8px;
+  background: linear-gradient(90deg, var(--blue) var(--v, 50%), var(--white) var(--v, 50%));
+}
+input[type="range"]::-moz-range-track {
+  height: 8px; border: 3px solid var(--ink); border-radius: 8px;
+  background: linear-gradient(90deg, var(--blue) var(--v, 50%), var(--white) var(--v, 50%));
+}
 input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 28px; height: 28px; margin-top: -7px; border-radius: 50%; border: 0; background-color: var(--accent); background-image: var(--bump); background-blend-mode: soft-light;
-  box-shadow: inset 0 4px 3px rgba(255, 255, 255, 0.55), inset 0 -5px 6px rgba(150, 50, 0, 0.4), 0 4px 6px var(--shade);
+  -webkit-appearance: none; width: 26px; height: 26px; margin-top: -9px; border-radius: 50%;
+  background: var(--white); border: 3px solid var(--ink);
 }
-input[type="range"]::-moz-range-thumb {
-  width: 28px; height: 28px; border-radius: 50%; border: 0; background-color: var(--accent); background-image: var(--bump); background-blend-mode: soft-light;
-  box-shadow: inset 0 4px 3px rgba(255, 255, 255, 0.55), inset 0 -5px 6px rgba(150, 50, 0, 0.4), 0 4px 6px var(--shade);
-}
+input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--white); border: 3px solid var(--ink); }
+input[type="range"]:active::-webkit-slider-thumb { background: var(--blue); }
+input[type="range"]:active::-moz-range-thumb { background: var(--blue); }
+input[type="range"]:focus-visible { outline: 3px dashed var(--ink); outline-offset: 4px; }
 
 @media (max-width: 760px) {
-  /* Phone: tools become a bar across the top, colors a sheet along the bottom. */
+  /* Phone: tools become a bar across the top, colors a sheet along the bottom. No title bars: the room goes to the controls. */
+  .titlebar { display: none; }
   .rail {
-    top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; width: auto; max-height: none; overflow: visible;
-    flex-direction: row; padding: 10px; border-radius: 30px; gap: 8px;
+    top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; width: auto; max-height: none;
   }
+  .rail .window-body { flex-direction: row; padding: 10px 14px 18px 10px; gap: 8px; overflow: visible; }
   .rail .keys { display: flex; gap: 6px; }
-  .rail .keys:first-child { flex: 2; }
+  .rail .keys:first-child { flex: 3; }
   .rail .keys:last-child { flex: 3; }
-  .rail .key { flex: 1; min-width: 0; width: auto; font-size: 10.5px; gap: 3px; box-shadow: inset 2px 3px 3px rgba(255, 215, 175, 0.5), inset -3px -4px 6px var(--shade-c), 0 5px 0 var(--side), 0 9px 10px rgba(90, 40, 10, 0.3); }
-  .rail .key-icon svg { width: 22px; height: 22px; }
-  .panel {
-    top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; width: auto;
-    max-height: 38dvh; padding: 14px; gap: 10px; border-radius: 30px;
-  }
-  .well { padding: 12px; gap: 12px; border-radius: 22px; }
+  .rail .key { flex: 1; min-width: 0; width: auto; font-size: 11px; gap: 3px; }
+  .rail .key-icon svg { width: 24px; height: 24px; }
+  .panel { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; width: auto; max-height: 38dvh; }
+  .panel .window-body { padding: 12px; gap: 10px; }
+  .well { padding: 12px; gap: 12px; }
   .swatches { grid-template-columns: repeat(6, 1fr); gap: 10px; }
 }
 
 /* Fingers need bigger targets, and nothing on the stage should select text or pop a callout. */
 .stage { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 @media (pointer: coarse) {
-  input[type="range"] { height: 32px; }
-  input[type="range"]::-webkit-slider-thumb { width: 32px; height: 32px; margin-top: -9px; }
-  input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; }
+  input[type="range"] { height: 38px; }
+  input[type="range"]::-webkit-slider-thumb { width: 32px; height: 32px; margin-top: -12px; }
+  input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; }
   input[type="color"] { height: 46px; }
 }
 
 /* Painting and pinch-zoom are handled in JS; stop the browser scrolling or zooming the page. */
 .stage, .stage div, .stage canvas { touch-action: none; }
 
-/* Paper grain under the canvas: the backdrop is a sheet of paper, not a smooth gradient. */
-.stage::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.16; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.45 0 0 0 0 0.25 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* The pointer shows the tool: a paintbrush or an eraser (hot spot at the tip / corner that touches the pumpkin), a hand to turn. */
+.stage[data-tool="paint"], .stage[data-tool="paint"] canvas { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path d='M3.5 28.5c0-3.2 1.6-5 4.3-5l2 2c0 2.7-1.8 4.3-4.8 4.3z' fill='%23f08a2e' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M9.8 23.5 24.5 8.8l3.2 3.2-14.7 14.7z' fill='%23fffdf7' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M24.5 8.8l2.4-2.4a2.3 2.3 0 0 1 3.2 3.2L27.7 12z' fill='%238795db' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/></svg>") 4 28, crosshair; }
+.stage[data-tool="erase"], .stage[data-tool="erase"] canvas { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path d='M4 21.5 17 8.5l9 9L15 28.5H9z' fill='%23f2a0b4' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M17 8.5l4.5-4.5 8 8-3.5 5.5z' fill='%238795db' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M6 28.5h10' stroke='%232a1d1a' stroke-width='2' stroke-linecap='round'/></svg>") 6 27, crosshair; }
+.stage[data-tool="turn"], .stage[data-tool="turn"] canvas { cursor: grab; }
+.stage[data-tool="turn"] canvas:active { cursor: grabbing; }
+
+/* Camera: a solid body of four slabs around an open window. The slabs are .float windows, so they share the inked, bevelled look. */
+.cam { position: absolute; inset: 0; z-index: 3; pointer-events: none; --side: 40px; --top: 64px; --bottom: 128px; }
+.cam-bar { pointer-events: auto; }
+.cam-top { top: 0; left: 0; right: 0; height: var(--top); flex-direction: row; align-items: center; justify-content: center; gap: 18px; }
+.cam-left { top: var(--top); bottom: var(--bottom); left: 0; width: var(--side); }
+.cam-right { top: var(--top); bottom: var(--bottom); right: 0; width: var(--side); }
+.cam-bottom { left: 0; right: 0; bottom: 0; height: var(--bottom); flex-direction: row; align-items: center; justify-content: center; }
+.cam-hole { position: absolute; top: var(--top); bottom: var(--bottom); left: var(--side); right: var(--side); }
+/* Frame corners and a centre mark, drawn on the glass. */
+.cam-hole .corner { position: absolute; width: 52px; height: 52px; border: 0 solid var(--ink); opacity: 0.8; filter: url(#wobble-sm); }
+.cam-hole .tl { top: 20px; left: 20px; border-width: 5px 0 0 5px; border-top-left-radius: 12px; }
+.cam-hole .tr { top: 20px; right: 20px; border-width: 5px 5px 0 0; border-top-right-radius: 12px; }
+.cam-hole .bl { bottom: 20px; left: 20px; border-width: 0 0 5px 5px; border-bottom-left-radius: 12px; }
+.cam-hole .br { bottom: 20px; right: 20px; border-width: 0 5px 5px 0; border-bottom-right-radius: 12px; }
+.cam-hole .cross { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; opacity: 0.6;
+  background: linear-gradient(var(--ink), var(--ink)) center / 4px 100% no-repeat, linear-gradient(var(--ink), var(--ink)) center / 100% 4px no-repeat; }
+.cam-lens-ring { width: 34px; height: 34px; border: 3px solid var(--ink); border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff 0 12%, var(--blue) 14% 55%, var(--ink) 58%); }
+.cam-grille { width: 120px; height: 18px; border: 3px solid var(--ink); border-radius: 4px; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 9px); }
+.cam-led { width: 14px; height: 14px; border: 3px solid var(--ink); border-radius: 50%; background: var(--red); }
+.cam-bottom { gap: 0; }
+.cam-bottom .cam-exit { position: absolute; left: 28px; top: 50%; margin-top: -22px; width: 104px; height: 44px; aspect-ratio: auto; border-radius: 22px 20px 23px 21px; }
+.cam-hint { position: absolute; right: 28px; top: 50%; margin-top: -9px; font-size: 13px; color: var(--muted); }
+/* The shutter is a big round key, like the keys: stands on an ink edge, drops flat when pressed. */
+.shutter {
+  position: relative; width: 84px; height: 84px; padding: 0; display: grid; place-items: center; cursor: pointer; color: var(--ink);
+  background-color: var(--red); background-image: var(--grain); background-blend-mode: multiply;
+  border: 4px solid var(--ink); border-radius: 50%; box-shadow: 4px 5px 0 var(--ink), inset 0 4px 0 rgba(255, 255, 255, 0.55);
+  filter: url(#wobble-sm);
 }
+.shutter svg { width: 40px; height: 40px; }
+.shutter:active { translate: 4px 5px; box-shadow: 0 0 0 var(--ink), inset 3px 4px 0 rgba(42, 29, 26, 0.28); }
+.shutter:focus-visible { outline: 3px dashed var(--ink); outline-offset: 5px; }
+.cam-flash { position: absolute; inset: 0; background: #fffdf7; animation: cam-flash 260ms ease-out forwards; }
+@keyframes cam-flash { from { opacity: 0.95; } to { opacity: 0; } }
+/* The photo drops onto the bottom corner like a print. */
+.polaroid {
+  position: absolute; right: calc(var(--side) + 24px); bottom: calc(var(--bottom) + 18px); width: 170px; padding: 8px 8px 26px;
+  background: var(--white); border: 3px solid var(--ink); box-shadow: 4px 5px 0 var(--ink); transform: rotate(4deg); animation: polaroid-in 320ms ease-out;
+}
+@keyframes polaroid-in { from { translate: 0 30px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+
+@media (max-width: 760px) {
+  .cam { --side: 14px; --top: 44px; --bottom: 112px; }
+  .cam-grille { width: 70px; }
+  .cam-bottom .cam-exit { left: 16px; width: 78px; height: 40px; margin-top: -20px; }
+  .cam-hint { display: none; }
+  .polaroid { width: 110px; right: calc(var(--side) + 12px); }
+  .rail .keys:first-child { flex: 4; }
+}
+@media (max-width: 760px) and (max-height: 520px) { .cam { --bottom: 96px; } }
+
+/* The gift box's keyboard stand-in: never seen unless it has keyboard focus. */
+.gift-key { position: fixed; z-index: 5; left: 50%; bottom: 20px; width: auto; aspect-ratio: auto; padding: 10px 22px; translate: -50% 0; opacity: 0; pointer-events: none; }
+.gift-key:focus-visible { opacity: 1; }

@@ -6,6 +6,10 @@ export interface Brush {
   puffiness: number;
   /** 0..1, matte to satin. */
   sheen: number;
+  /** Put the bare skin back instead of painting: base color, no height, base roughness. */
+  erase?: boolean;
+  /** Gap between dabs as a fraction of the radius (default 0.22). Wider is faster and leaves a slightly scalloped edge. */
+  spacing?: number;
 }
 
 export const HEIGHT_RINGS = 9;
@@ -31,7 +35,7 @@ export interface HeightRing {
 }
 
 /**
- * Height profile of one round clay "tube": concentric filled circles from outside in, each taller than the last,
+ * Height profile of one round "tube": concentric filled circles from outside in, each taller than the last,
  * following the rising edge of a circle: h(d) = sqrt(1 - d^2). Drawn with a 'lighten' blend so overlapping dabs keep the highest point.
  */
 export function heightProfile(amplitude: number, rings: number = HEIGHT_RINGS): HeightRing[] {

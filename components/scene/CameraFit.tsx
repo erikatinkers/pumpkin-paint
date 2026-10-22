@@ -4,9 +4,11 @@ import { useLayoutEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { FIXED_CAMERA } from "@/lib/debug";
+import { PUMPKIN_SCALE } from "./Pumpkin";
 
-const HALF_WIDTH = 1.75; // pumpkin radius plus breathing room
-const HALF_HEIGHT = 1.4; // body, stem and the floor shadow
+// Pumpkin radius, and body plus stem, with breathing room: measured on the unscaled model, so they follow PUMPKIN_SCALE.
+const HALF_WIDTH = 1.45 * PUMPKIN_SCALE;
+const HALF_HEIGHT = 1.15 * PUMPKIN_SCALE;
 const GAP = 24; // space kept between the pumpkin's frame and a floating panel
 const FLOOR_BIAS = 0.04; // seat the pumpkin a little low in the free space, so there is floor under it
 

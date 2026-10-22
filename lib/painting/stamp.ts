@@ -15,29 +15,23 @@ export function softenStamp(data: Uint8ClampedArray, width: number, height: numb
   }
   let b = new Float32Array(n * 4);
   const taps = radius * 2 + 1;
-  for (let p = 0; p < passes; p++) {
-    for (const horizontal of [true, false]) {
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          let r = 0, g = 0, bl = 0, al = 0;
-          for (let k = -radius; k <= radius; k++) {
-            const sx = horizontal ? Math.min(width - 1, Math.max(0, x + k)) : x;
-            const sy = horizontal ? y : Math.min(height - 1, Math.max(0, y + k));
-            const j = (sy * width + sx) * 4;
-            r += a[j];
-            g += a[j + 1];
-            bl += a[j + 2];
-            al += a[j + 3];
-          }
-          const o = (y * width + x) * 4;
-          b[o] = r / taps;
-          b[o + 1] = g / taps;
-          b[o + 2] = bl / taps;
-          b[o + 3] = al / taps;
-        }
+  // A sliding window per row or column: each step adds the pixel entering the window and drops the one leaving it (edges clamp), so cost does not grow with `radius`.
+  const blurLine = (start: number, stride: number, len: number) => {
+    for (let c = 0; c < 4; c++) {
+      const at = (i: number) => a[start + Math.min(len - 1, Math.max(0, i)) * stride + c];
+      let sum = 0;
+      for (let k = -radius; k <= radius; k++) sum += at(k);
+      for (let i = 0; i < len; i++) {
+        b[start + i * stride + c] = sum / taps;
+        sum += at(i + radius + 1) - at(i - radius);
       }
-      [a, b] = [b, a];
     }
+  };
+  for (let p = 0; p < passes; p++) {
+    for (let y = 0; y < height; y++) blurLine(y * width * 4, 4, width);
+    [a, b] = [b, a];
+    for (let x = 0; x < width; x++) blurLine(x * 4, width * 4, height);
+    [a, b] = [b, a];
   }
   for (let i = 0; i < n; i++) {
     const al = a[i * 4 + 3];

@@ -101,22 +101,35 @@ export function createStemGeometry(): THREE.LatheGeometry {
   return geo;
 }
 
-/** One fat clay leaf, base at the origin and tip along +x: a squashed, pointed ellipsoid with a centre fold and an upward curl. */
-export function createLeafGeometry(): THREE.SphereGeometry {
-  const geo = new THREE.SphereGeometry(1, 28, 18);
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const t = (x + 1) / 2; // 0 at the stem end, 1 at the tip
-    const width = 0.2 * (1 - 0.5 * t);
-    const tip = t > 0.85 ? 1 + 0.18 * Math.pow((t - 0.85) / 0.15, 2) : 1; // gently pointed tip
-    pos.setXYZ(i, (x + 1) * 0.3 * tip, y * 0.08 - 0.05 * Math.abs(z) + 0.12 * t * t, z * width);
-  }
-  smoothSeams(geo);
-  return geo;
-}
-
 /** Low-poly twin of the pumpkin body, same shape function and UVs, used only for pointer raycasts (about 3x fewer triangles). */
 export function createPumpkinPickGeometry(): THREE.SphereGeometry {
   return createPumpkinGeometry(192, 64);
+}
+
+/**
+ * Adds an ink outline to a closed shape without a second draw call: a copy of the mesh with flipped winding, flagged by `aHull`.
+ * Consumes `geo`. The sketch material pushes those vertices outward along their normals and paints them ink, so only the rim behind the shape shows.
+ */
+export function withInkHull(geo: THREE.BufferGeometry): THREE.BufferGeometry {
+  const src = geo.index ? geo : geo.toNonIndexed();
+  const n = src.attributes.position.count;
+  const out = new THREE.BufferGeometry();
+  for (const name of ["position", "normal", "uv", "color"] as const) {
+    const a = src.attributes[name];
+    if (!a) continue;
+    const arr = new Float32Array(a.array.length * 2);
+    arr.set(a.array as Float32Array);
+    arr.set(a.array as Float32Array, a.array.length);
+    out.setAttribute(name, new THREE.BufferAttribute(arr, a.itemSize));
+  }
+  const hull = new Float32Array(n * 2);
+  hull.fill(1, n);
+  out.setAttribute("aHull", new THREE.BufferAttribute(hull, 1));
+  const idx = src.index ? Array.from(src.index.array) : Array.from({ length: n }, (_, i) => i);
+  const flipped: number[] = [];
+  for (let i = 0; i < idx.length; i += 3) flipped.push(idx[i] + n, idx[i + 2] + n, idx[i + 1] + n);
+  out.setIndex([...idx, ...flipped]);
+  if (src !== geo) src.dispose();
+  geo.dispose(); // consumed: the caller keeps only the returned geometry
+  return out;
 }

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { type Brush, brushRadius, gray, heightProfile, roughnessForSheen } from "./brush";
-import { CLAY_ROUGHNESS } from "@/lib/clayMaterial";
+import { BASE_ROUGHNESS } from "@/lib/sketchMaterial";
 import { type Point, interpolateDabs, poleStretch, seamOffsets, textureSizeFor, uvToPixel } from "./strokes";
 import { softenStamp } from "./stamp";
 import { CanvasMirror } from "./textures";
@@ -20,6 +20,12 @@ function makeCanvas(w: number, h: number): { canvas: HTMLCanvasElement; ctx: Can
   // Layers are read back every frame (undo tiles, texture sync), so keep them CPU-side.
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   return { canvas, ctx };
+}
+
+/** Rounds a radius to a step of about 6%, so brushes of slightly different sizes share one height stamp (building a stamp is the costly part of a dab). */
+function quantizeRadius(r: number): number {
+  const step = Math.max(1, Math.round(r * 0.06));
+  return Math.max(1, Math.round(r / step) * step);
 }
 
 function canvasLayer(ctx: CanvasRenderingContext2D): TileLayer {
@@ -109,7 +115,7 @@ export class PaintEngine {
     this.heightCtx.globalCompositeOperation = "source-over";
     this.heightCtx.fillStyle = "#000";
     this.heightCtx.fillRect(0, 0, W, H);
-    this.roughCtx.fillStyle = gray(CLAY_ROUGHNESS);
+    this.roughCtx.fillStyle = gray(BASE_ROUGHNESS);
     this.roughCtx.fillRect(0, 0, W, H);
     this.markDirty(0, 0, W, H);
   }
@@ -131,7 +137,7 @@ export class PaintEngine {
       this.lastDab = p;
       return;
     }
-    for (const q of interpolateDabs(this.lastDab, p, Math.max(1, r * 0.22), this.width)) {
+    for (const q of interpolateDabs(this.lastDab, p, Math.max(1, r * (brush.spacing ?? 0.22)), this.width)) {
       this.dab(q, brush);
       this.lastDab = q;
     }
@@ -165,7 +171,17 @@ export class PaintEngine {
     this.repaint(this.history.redo());
   }
 
-  /** Wipe all paint back to bare clay. Not undoable (the UI asks twice first). */
+  /**
+   * Begin a stroke that first puts the whole pumpkin back to bare skin; everything drawn until `endStroke` joins it,
+   * so a whole generated painting (see `surprise/`) is one undo step that brings back what was there before.
+   */
+  beginFresh(): void {
+    this.beginStroke();
+    this.history.touch(0, 0, this.width, this.height);
+    this.resetLayers();
+  }
+
+  /** Wipe all paint back to a bare pumpkin. Not undoable (the UI asks twice first). */
   clear(): void {
     this.stroking = false;
     this.lastDab = null;
@@ -193,6 +209,18 @@ export class PaintEngine {
       const bh = r * 2 + 2;
       this.history.touch(bx, by, bw, bh);
 
+      if (brush.erase) {
+        // Put the bare skin back: base color, no height, base roughness.
+        this.colorCtx.fillStyle = this.baseColor;
+        this.disc(this.colorCtx, cx, p.y, rx, r);
+        this.roughCtx.fillStyle = gray(BASE_ROUGHNESS);
+        this.disc(this.roughCtx, cx, p.y, rx, r);
+        this.heightCtx.fillStyle = "#000";
+        this.disc(this.heightCtx, cx, p.y, rx, r);
+        this.markDirty(bx, by, bw, bh);
+        continue;
+      }
+
       // Flat color and roughness: one disc.
       this.colorCtx.fillStyle = brush.color;
       this.disc(this.colorCtx, cx, p.y, rx, r);
@@ -212,13 +240,13 @@ export class PaintEngine {
 
   /** The 9 concentric height rings for one dab shape, drawn once and reused. Sizes and amplitude are quantized so the cache stays small. */
   private heightStamp(rx: number, ry: number, puffiness: number): HTMLCanvasElement {
-    const qx = Math.max(1, Math.round(rx));
-    const qy = Math.max(1, Math.round(ry));
+    const qx = quantizeRadius(rx);
+    const qy = quantizeRadius(ry);
     const amp = Math.round(puffiness * 64) / 64;
     const key = `${qx}|${qy}|${amp}`;
     let stamp = this.stamps.get(key);
     if (!stamp) {
-      if (this.stamps.size >= 128) this.stamps.clear();
+      if (this.stamps.size >= 400) this.stamps.clear();
       stamp = document.createElement("canvas");
       stamp.width = qx * 2 + 2;
       stamp.height = qy * 2 + 2;
@@ -227,7 +255,7 @@ export class PaintEngine {
         ctx.fillStyle = gray(ring.value);
         this.disc(ctx, stamp.width / 2, stamp.height / 2, qx * ring.radius, qy * ring.radius);
       }
-      // Round off the ring steps and the wall: a clay coil has a soft, pillowy edge, not a cliff.
+      // Round off the ring steps and the wall: a soft edge reads better to the edge-detecting pen than a cliff.
       const img = ctx.getImageData(0, 0, stamp.width, stamp.height);
       softenStamp(img.data, stamp.width, stamp.height, Math.max(1, Math.round(Math.min(qx, qy) / 9)));
       ctx.putImageData(img, 0, 0);

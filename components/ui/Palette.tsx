@@ -1,14 +1,19 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { PAINTS, useBrush } from "@/lib/store";
+import Window from "./Window";
+
+/** The fill of a segmented bar, as a percentage the stylesheet reads. */
+const fill = (pct: number) => ({ "--v": `${pct}%` }) as CSSProperties;
 
 export default function Palette() {
-  const { color, colorName, size, puffiness, sheen, setColor, setSize, setPuffiness, setSheen } = useBrush();
+  const { color, colorName, size, setColor, setSize, closePalette } = useBrush();
   return (
-    <aside className="float panel" data-floating aria-label="Paint palette">
-      <h2>Clay colors</h2>
+    <Window className="panel" label="Paint palette" onClose={closePalette} title="www.pumpkin.paint/colors">
+      <h2>Watercolors</h2>
       <div className="well">
-        <div className="swatches" role="radiogroup" aria-label="Clay colors">
+        <div className="swatches" role="radiogroup" aria-label="Watercolors">
           {PAINTS.map((p) => (
             <button
               key={p.hex}
@@ -33,15 +38,9 @@ export default function Palette() {
 
       <div className="well">
         <label>Size {size}
-          <input type="range" min={6} max={80} value={size} onChange={(e) => setSize(+e.target.value)} />
-        </label>
-        <label>Puffiness {Math.round(puffiness * 100)}%
-          <input type="range" min={0} max={100} value={puffiness * 100} onChange={(e) => setPuffiness(+e.target.value / 100)} />
-        </label>
-        <label>Sheen {Math.round(sheen * 100)}%
-          <input type="range" min={0} max={100} value={sheen * 100} onChange={(e) => setSheen(+e.target.value / 100)} />
+          <input type="range" min={6} max={80} value={size} style={fill(((size - 6) / 74) * 100)} onChange={(e) => setSize(+e.target.value)} />
         </label>
       </div>
-    </aside>
+    </Window>
   );
 }

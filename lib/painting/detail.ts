@@ -14,14 +14,6 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-/** Shortest signed distance between two coordinates on a wrapping axis, so every feature tiles seamlessly. */
-function wrapDelta(a: number, b: number, size: number): number {
-  let d = a - b;
-  if (d > size / 2) d -= size;
-  else if (d < -size / 2) d += size;
-  return d;
-}
-
 /** Tileable value noise in [0, 1]: a wrapping lattice of random values, smoothly interpolated. */
 function valueNoise(size: number, cells: number, rand: () => number): Float32Array {
   const lattice = new Float32Array(cells * cells);
@@ -47,78 +39,23 @@ function valueNoise(size: number, cells: number, rand: () => number): Float32Arr
 }
 
 /**
- * Tileable surface detail for pressed clay, one byte per pixel with 128 as neutral:
- * a few fingerprint whorls (crisp ridges that break up and fade, like a real thumb press), shallow thumb dents with a lifted rim,
- * tiny pits and fine powdery grain. Every feature measures distance with wrap-around, so the map tiles with no visible seam.
+ * Tileable pigment granulation, one byte per pixel with 128 as neutral: watercolor pigment settles into the grooves of the paper,
+ * so the wash is faintly speckled and fibrous. Fine and mid-scale value noise plus a little per-pixel grain.
  */
 export function generateDetail(size = DETAIL_SIZE, seed = 7): Uint8ClampedArray {
   const rand = mulberry32(seed);
-  const field = new Float32Array(size * size);
-  const breakup = valueNoise(size, 18, rand); // ridges come and go along their length
-  const warpX = valueNoise(size, 7, rand); // bends the ridges so no whorl is a perfect bullseye
-  const warpY = valueNoise(size, 7, rand);
-
-  const splat = (cx: number, cy: number, radius: number, fn: (dx: number, dy: number, R: number, idx: number) => number) => {
-    const reach = Math.ceil(radius * 1.6);
-    for (let oy = -reach; oy <= reach; oy++) {
-      for (let ox = -reach; ox <= reach; ox++) {
-        const x = (((Math.round(cx) + ox) % size) + size) % size;
-        const y = (((Math.round(cy) + oy) % size) + size) % size;
-        const idx = y * size + x;
-        field[idx] += fn(wrapDelta(x, cx, size), wrapDelta(y, cy, size), radius, idx);
-      }
-    }
-  };
-
-  // Fingerprint whorls: slightly oval, off-round ridges with a crisp crest and a flat valley.
-  for (let i = 0; i < 3; i++) {
-    const cx = rand() * size, cy = rand() * size;
-    const radius = 105 + rand() * 45;
-    const period = 17 + rand() * 4;
-    const squash = 0.75 + rand() * 0.3;
-    const tilt = rand() * Math.PI;
-    const twist = 0.6 + rand() * 0.8;
-    const phase = rand() * Math.PI * 2;
-    const [cos, sin] = [Math.cos(tilt), Math.sin(tilt)];
-    splat(cx, cy, radius, (dx, dy, R, idx) => {
-      const wx = dx + (warpX[idx] - 0.5) * 26;
-      const wy = dy + (warpY[idx] - 0.5) * 26;
-      const u = wx * cos + wy * sin;
-      const v = (-wx * sin + wy * cos) / squash;
-      const r = Math.hypot(u, v);
-      const angle = Math.atan2(v, u);
-      const wave = Math.sin((r / period) * Math.PI * 2 + twist * Math.sin(angle * 2 + phase) * 3.4 + 1.1 * Math.sin(angle * 3 + phase));
-      const crest = Math.pow(0.5 + 0.5 * wave, 1.7) - 0.38;
-      const fade = Math.exp(-Math.pow(r / R, 3));
-      const gaps = Math.min(1, Math.max(0.15, 0.6 + 1.1 * (breakup[idx] - 0.5)));
-      return 0.4 * crest * fade * gaps;
-    });
-  }
-
-  // Shallow thumb dents with a faintly lifted rim.
-  for (let i = 0; i < 3; i++) {
-    splat(rand() * size, rand() * size, 60 + rand() * 25, (dx, dy, R) => {
-      const t = Math.hypot(dx, dy) / R;
-      return -0.16 * Math.exp(-Math.pow(t / 0.55, 2)) + 0.05 * Math.exp(-Math.pow((t - 0.75) / 0.2, 2));
-    });
-  }
-
-  // Tiny pits.
-  for (let i = 0; i < 170; i++) {
-    splat(rand() * size, rand() * size, 2 + rand() * 1.6, (dx, dy, R) => -0.4 * Math.exp(-Math.pow(Math.hypot(dx, dy) / (R * 0.7), 2)));
-  }
-
+  const fine = valueNoise(size, Math.round(size / 3), rand);
+  const mid = valueNoise(size, Math.round(size / 12), rand);
   const out = new Uint8ClampedArray(size * size);
-  for (let i = 0; i < field.length; i++) {
-    const grain = (rand() - 0.5) * 0.1; // fine powdery grain
-    out[i] = Math.round((0.5 + field[i] + grain) * 255);
+  for (let i = 0; i < out.length; i++) {
+    const n = 0.5 + (fine[i] - 0.5) * 0.7 + (mid[i] - 0.5) * 0.5 + (rand() - 0.5) * 0.3;
+    out[i] = Math.round(Math.min(1, Math.max(0, n)) * 255);
   }
   return out;
 }
 
 /**
- * Low-frequency pigment mottling, 128 neutral: clay is never perfectly evenly colored, so a few soft blotches shift the lightness
- * by a few percent. Three octaves of tileable value noise.
+ * Low-frequency wash blotches, 128 neutral: a brushed wash never dries perfectly even, so soft pools of pigment shift the lightness. Three octaves of tileable value noise.
  */
 export function generateMottle(size = DETAIL_SIZE, seed = 7): Uint8ClampedArray {
   const rand = mulberry32(seed * 7919 + 13);
@@ -132,7 +69,7 @@ export function generateMottle(size = DETAIL_SIZE, seed = 7): Uint8ClampedArray 
   return out;
 }
 
-/** Detail (R) and mottling (G) as one repeating texture. Generated once; the caller owns (and disposes) it. */
+/** Granulation (R) and wash blotches (G) as one repeating texture. Generated once; the caller owns (and disposes) it. */
 export function createDetailTexture(seed = 7): THREE.CanvasTexture {
   const size = DETAIL_SIZE;
   const canvas = document.createElement("canvas");
@@ -142,8 +79,8 @@ export function createDetailTexture(seed = 7): THREE.CanvasTexture {
   const fine = generateDetail(size, seed);
   const mottle = generateMottle(size, seed);
   for (let i = 0; i < fine.length; i++) {
-    img.data[i * 4] = fine[i]; // R: fingerprints, dents, pits, grain
-    img.data[i * 4 + 1] = mottle[i]; // G: pigment mottling
+    img.data[i * 4] = fine[i]; // R: pigment granulation
+    img.data[i * 4 + 1] = mottle[i]; // G: wash blotches
     img.data[i * 4 + 2] = 128;
     img.data[i * 4 + 3] = 255;
   }

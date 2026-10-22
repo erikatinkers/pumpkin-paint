@@ -1,6 +1,6 @@
 # Pumpkin Paint Studio
 
-A 3D clay pumpkin you can rotate and paint. Next.js (App Router), TypeScript, react-three-fiber, drei, zustand.
+A 3D pumpkin you can rotate and paint, drawn in pen and watercolor. Next.js (App Router), TypeScript, react-three-fiber, drei, zustand.
 
 ```bash
 npm install
@@ -21,11 +21,11 @@ CI (`.github/workflows/ci.yml`) runs typecheck, lint, unit tests and build on ev
 
 ## Testing the 3D scene
 
-- `?debug&seed=1` fixes the camera, turns orbit off, renders at 1x pixel ratio and seeds the clay detail, so screenshots are repeatable.
+- `?debug&seed=1` fixes the camera, turns orbit off, renders at 1x pixel ratio and seeds the pigment detail, so screenshots are repeatable.
 - In dev, `window.__pumpkin` exposes `paintStroke(points)` (UV coordinates), `setCamera(az, po, d)`, `reset()`, `settled()`, `stats()` (draw calls, texture size) and `perf()`.
 - Screenshot baselines live in `tests/e2e/__screenshots__/`. After an intentional visual change, regenerate them with `npx playwright test --update-snapshots` and review the diff.
 
 ## Layout
 
 - `app/` routes only. `components/scene/` the 3D scene (client-only, loaded with `dynamic(..., { ssr: false })`). `components/ui/` palette and toolbar.
-- `lib/painting/` brush, strokes, undo, textures and the paint engine. `lib/shaders/` clay glow and detail patches. `lib/store.ts` brush state.
+- `lib/painting/` brush, strokes, undo, textures and the paint engine. `lib/shaders/` the pen-and-watercolor shader patch. `lib/store.ts` brush state.

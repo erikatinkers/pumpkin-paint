@@ -4,7 +4,17 @@ import { useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { PaintEngine } from "@/lib/painting/engine";
-import { useBrush } from "@/lib/store";
+import { cancelSurprise } from "@/lib/painting/surprise";
+import { sound } from "@/lib/sound";
+import { type Tool, useBrush } from "@/lib/store";
+
+const DRAWING_TOOLS: readonly Tool[] = ["paint", "erase"];
+
+/** The brush for the current tool: the same size, but the eraser puts the bare skin back. */
+const currentBrush = () => {
+  const s = useBrush.getState();
+  return { ...s, erase: s.tool === "erase" };
+};
 
 interface OrbitLike {
   target: THREE.Vector3;
@@ -15,7 +25,7 @@ interface OrbitLike {
 
 /**
  * Routes pointer input between painting and orbiting.
- *  - Paint tool: a press that lands on the pumpkin paints; a press elsewhere falls through to OrbitControls.
+ *  - Paint and Erase tools: a press that lands on the pumpkin paints (or erases); a press elsewhere falls through to OrbitControls.
  *  - Turn tool: never intercepts, so OrbitControls always rotates.
  *  - Touch: one finger paints or turns by tool; a second finger cancels the stroke and pinch-zooms.
  * Listeners sit in the capture phase on the canvas wrapper, so a paint press never reaches OrbitControls.
@@ -44,7 +54,6 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
     let mode: "idle" | "paint" | "pinch" = "idle";
     let paintId = -1;
     let pinchDist = 0;
-
     const uvAt = (clientX: number, clientY: number): THREE.Vector2 | null => {
       const body = scene.getObjectByName("pumpkin-pick");
       if (!body) return null;
@@ -65,13 +74,15 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
 
       if (e.pointerType === "touch" && pointers.size === 2 && mode !== "idle") {
         // Second finger: drop the stroke and pinch-zoom instead.
-        if (mode === "paint") engine.cancelStroke();
+        if (mode === "paint") {
+          engine.cancelStroke();
+        }
         mode = "pinch";
         pinchDist = twoFingerDistance();
         e.stopPropagation();
         return;
       }
-      if (mode !== "idle" || pointers.size !== 1 || useBrush.getState().tool !== "paint") return;
+      if (mode !== "idle" || pointers.size !== 1 || !DRAWING_TOOLS.includes(useBrush.getState().tool)) return;
 
       const uv = uvAt(e.clientX, e.clientY);
       if (!uv) return; // missed the pumpkin: let OrbitControls rotate
@@ -82,8 +93,10 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
       } catch {
         // Not a live pointer (e.g. a synthetic event); painting still works without capture.
       }
+      cancelSurprise(); // a surprise still painting stops where it is; your stroke takes over
       engine.beginStroke();
-      engine.strokeTo(uv.x, uv.y, useBrush.getState());
+      engine.strokeTo(uv.x, uv.y, currentBrush());
+      sound.strokeStart(useBrush.getState().tool === "erase");
       e.stopPropagation();
     };
 
@@ -91,7 +104,7 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
       if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
       if (mode === "paint" && e.pointerId === paintId) {
-        const brush = useBrush.getState();
+        const brush = currentBrush();
         const samples = e.getCoalescedEvents?.() ?? [];
         for (const ce of samples.length ? samples : [e]) {
           const uv = uvAt(ce.clientX, ce.clientY);
@@ -129,7 +142,9 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
       host.removeEventListener("pointermove", onMove);
       host.removeEventListener("pointerup", onUp);
       host.removeEventListener("pointercancel", onUp);
-      if (mode === "paint") engine.endStroke();
+      if (mode === "paint") {
+        engine.endStroke();
+      }
     };
   }, [gl, camera, scene, controls, engine]);
 

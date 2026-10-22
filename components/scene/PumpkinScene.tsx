@@ -3,12 +3,12 @@
 import { useEffect, useMemo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Environment, Lightformer, OrbitControls } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { PaintEngine } from "@/lib/painting/engine";
-import { seedExampleStrokes } from "@/lib/painting/seed";
 import { paintRegistry } from "@/lib/painting/registry";
 import { useBrush } from "@/lib/store";
 import { markSettled, parseDebug } from "@/lib/debug";
+import { captureRegistry } from "@/lib/capture";
 import CameraFit, { FixedCamera } from "./CameraFit";
 import DevHook from "./DevHook";
 import PaintInteraction from "./PaintInteraction";
@@ -31,13 +31,26 @@ function WarmUp() {
   return null;
 }
 
+/** Lets the viewfinder (outside the Canvas) take a shot: render once, then read the canvas in the same tick, since the buffer isn't preserved. */
+function CaptureHook() {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  useEffect(() => {
+    captureRegistry.set(() => {
+      gl.render(scene, camera);
+      return gl.domElement;
+    });
+    return () => captureRegistry.set(null);
+  }, [gl, scene, camera]);
+  return null;
+}
+
 export default function PumpkinScene() {
   const debug = useMemo(() => parseDebug(window.location.search), []);
   const coarse = useMemo(() => window.matchMedia("(pointer: coarse)").matches, []);
   const engine = useMemo(() => {
-    const e = new PaintEngine({ baseColor: PUMPKIN_COLOR });
-    seedExampleStrokes(e);
-    return e;
+    return new PaintEngine({ baseColor: PUMPKIN_COLOR });
   }, []);
 
   useEffect(() => {
@@ -51,35 +64,30 @@ export default function PumpkinScene() {
   }, [engine]);
 
   return (
-    // `flat` turns tone mapping off, so the pastels render exactly as authored.
+    // `flat` turns tone mapping off, so the washes render exactly as authored.
     <Canvas
       flat
       frameloop="demand"
-      camera={{ position: [0.4, 1.5, 4.6], fov: 32 }}
+      // A narrow lens (near-orthographic) keeps the perspective squash out, so it reads as a drawing, not a model.
+      camera={{ position: [0.4, 1.5, 4.6].map((v) => v * 2.75) as [number, number, number], fov: 12 }}
       dpr={debug.enabled ? 1 : [1, 2]}
       // Phones render at 2x already; MSAA on top is wasted fill rate.
       gl={{ antialias: !coarse, alpha: true, powerPreference: "high-performance" }}
       style={{ position: "absolute", inset: 0 }}
     >
-      <hemisphereLight args={["#fff3e6", "#d8b48c", 0.34]} />
-      <directionalLight position={[-3, 4.5, 4]} intensity={2.5} color="#fff1e4" />
-      {/* Bright, soft studio environment: big lightformers on a lavender void. */}
-      <Environment resolution={128} environmentIntensity={0.3}>
-        <color attach="background" args={["#fbeedd"]} />
-        <Lightformer form="rect" intensity={2.2} color="#fff4ec" position={[-4, 4, 3]} scale={[8, 5, 1]} />
-        <Lightformer form="rect" intensity={1.2} color="#ffe8d0" position={[4, 2, -2]} scale={[6, 4, 1]} />
-        <Lightformer form="ring" intensity={0.8} color="#ffe6d6" position={[0, 6, 0]} scale={5} rotation-x={Math.PI / 2} />
-      </Environment>
+      {/* The sketch shader reads only this light's direction: it picks which side of the pumpkin gets the shadow wash. */}
+      <directionalLight position={[-5, 3.5, 1.5]} intensity={1} />
       <WarmUp />
+      <CaptureHook />
       {debug.enabled ? <FixedCamera /> : <CameraFit />}
       <Pumpkin engine={engine} detailSeed={debug.seed ?? undefined} />
       <OrbitControls
         makeDefault
         enabled={!debug.enabled}
         enablePan={false}
-        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }} minDistance={2.4}
-        maxDistance={14}
-        maxPolarAngle={Math.PI * 0.62}
+        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }} minDistance={6.5}
+        maxDistance={38}
+        maxPolarAngle={Math.PI * 0.53}
       />
       <PaintInteraction engine={engine} />
       {process.env.NODE_ENV !== "production" && <DevHook engine={engine} />}

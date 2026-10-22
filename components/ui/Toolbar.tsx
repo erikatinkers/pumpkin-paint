@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { parseDebug } from "@/lib/debug";
 import { paintRegistry } from "@/lib/painting/registry";
+import { cancelSurprise } from "@/lib/painting/surprise";
 import { useBrush } from "@/lib/store";
 import { ClearIcon, RedoIcon, UndoIcon } from "./icons";
 
@@ -25,6 +26,7 @@ export default function Toolbar() {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "z") return;
       e.preventDefault();
+      cancelSurprise();
       if (e.shiftKey) paintRegistry.get()?.redo();
       else paintRegistry.get()?.undo();
     };
@@ -34,11 +36,11 @@ export default function Toolbar() {
 
   return (
     <div className="keys" role="group" aria-label="Edit">
-      <button className="key" disabled={!canUndo} onClick={() => paintRegistry.get()?.undo()}>
+      <button className="key" disabled={!canUndo} onClick={() => { cancelSurprise(); paintRegistry.get()?.undo(); }}>
         <span className="key-icon"><UndoIcon /></span>
         <span className="key-label">Undo</span>
       </button>
-      <button className="key" disabled={!canRedo} onClick={() => paintRegistry.get()?.redo()}>
+      <button className="key" disabled={!canRedo} onClick={() => { cancelSurprise(); paintRegistry.get()?.redo(); }}>
         <span className="key-icon"><RedoIcon /></span>
         <span className="key-label">Redo</span>
       </button>
@@ -48,6 +50,7 @@ export default function Toolbar() {
         data-armed={armed}
         onClick={() => {
           if (!armed) return setArmed(true);
+          cancelSurprise();
           paintRegistry.get()?.clear();
           setArmed(false);
         }}
