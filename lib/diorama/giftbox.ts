@@ -15,6 +15,70 @@ export const GIFT_BODY_HEIGHT = 0.5;
 const at = (x: number, y: number, z: number, rotZ = 0) =>
   new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), rotZ), new THREE.Vector3(1, 1, 1));
 
+interface PuffOptions {
+  length: number;
+  /** Half-width across the piece at the knot end and at the far end: it flares as it goes. */
+  root: number;
+  tip: number;
+  /** Half-thickness at its fullest. */
+  thick: number;
+  /** How far the middle of the far edge is pulled back toward the knot: a little makes a curved end, a lot a swallowtail. */
+  notch: number;
+  /** How far the top and bottom are pressed in along the middle, like a crease in cloth. */
+  crease?: number;
+}
+
+/**
+ * A pillowy piece of ribbon or fabric pointing along +x from the origin: a tube whose flat, oval section widens and swells along its length,
+ * with the far edge notched. Closed at both ends and smooth-shaded, so the ink outline hugs it.
+ */
+function puff({ length, root, tip, thick, notch, crease = 0 }: PuffOptions): THREE.BufferGeometry {
+  const U = 22, V = 24;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= U; i++) {
+    const u = i / U;
+    const round = u > 0.8 ? Math.pow(Math.max(0, 1 - Math.pow((u - 0.8) / 0.2, 2)), 0.4) : 1; // rounds the far end off instead of leaving two sharp corners
+    const w = (root + (tip - root) * Math.pow(u, 1.25)) * Math.max(round, 0.08);
+    const t = thick * (0.3 + 0.7 * Math.sin(Math.min(1, u * 1.1) * Math.PI * 0.5));
+    for (let j = 0; j < V; j++) {
+      const a = (j / V) * Math.PI * 2;
+      const c = Math.cos(a), sn = Math.sin(a);
+      const x = length * u - notch * (1 - Math.abs(c)) * Math.pow(u, 5);
+      const y = t * sn - Math.sign(sn) * crease * Math.exp(-c * c * 5) * Math.sin(u * Math.PI) * t;
+      pos.push(x, y, w * c);
+    }
+  }
+  for (let i = 0; i < U; i++) {
+    for (let j = 0; j < V; j++) {
+      const a = i * V + j, b = i * V + ((j + 1) % V), c = (i + 1) * V + ((j + 1) % V), d = (i + 1) * V + j;
+      idx.push(a, d, b, b, d, c);
+    }
+  }
+  // Close the two ends with a fan to a centre point.
+  for (const [ring, flip] of [[0, false], [U, true]] as const) {
+    const centre = pos.length / 3;
+    pos.push(length * (ring / U), 0, 0);
+    for (let j = 0; j < V; j++) {
+      const a = ring * V + j, b = ring * V + ((j + 1) % V);
+      idx.push(...(flip ? [b, a, centre] : [a, b, centre]));
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array((pos.length / 3) * 2), 2)); // the box pieces carry UVs, so these must too to merge
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Places a piece at (x, y, z): turned `yaw` about the vertical, then raised `lift` about z, after rolling it `roll` about its own length. */
+function place(x: number, y: number, z: number, yaw: number, lift: number, roll: number): THREE.Matrix4 {
+  const axis = (v: [number, number, number], a: number) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...v), a);
+  const q = axis([0, 1, 0], yaw).multiply(axis([0, 0, 1], lift)).multiply(axis([1, 0, 0], roll));
+  return new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1, 1, 1));
+}
+
 /**
  * A wrapped present, sitting on y = 0. The body and the lid are separate meshes, so the lid can pop off: the lid's own origin is the top of the body.
  * Both carry vertex colors and an ink hull, for the props material.
@@ -45,10 +109,13 @@ export function createGiftBoxGeometry(): { body: THREE.BufferGeometry; lid: THRE
     colored(new RoundedBoxGeometry(0.9, 0.17, 0.9, 2, 0.03), LID, at(0, 0.075, 0)),
     colored(new RoundedBoxGeometry(0.15, 0.176, 0.906, 2, 0.02), RIBBON, at(0, 0.075, 0)),
     colored(new RoundedBoxGeometry(0.906, 0.176, 0.15, 2, 0.02), RIBBON, at(0, 0.075, 0)),
-    // The bow: two loops either side of a knot.
-    colored(new THREE.TorusGeometry(0.1, 0.035, 8, 16), RIBBON, at(-0.11, 0.25, 0, 0.5)),
-    colored(new THREE.TorusGeometry(0.1, 0.035, 8, 16), RIBBON, at(0.11, 0.25, 0, -0.5)),
-    colored(new THREE.SphereGeometry(0.06, 10, 8), RIBBON, at(0, 0.19, 0)),
+    // The bow: two puffy wings flaring out either side of a squarish knot, and two tails lying on the lid.
+    colored(puff({ length: 0.34, root: 0.045, tip: 0.15, thick: 0.05, notch: 0.06, crease: 0.45 }), RIBBON, place(0.05, 0.225, 0, 0, 0.3, Math.PI / 2)),
+    colored(puff({ length: 0.34, root: 0.045, tip: 0.15, thick: 0.05, notch: 0.06, crease: 0.45 }), RIBBON, place(-0.05, 0.225, 0, Math.PI, 0.3, Math.PI / 2)),
+    colored(puff({ length: 0.33, root: 0.04, tip: 0.12, thick: 0.014, notch: 0.09 }), RIBBON, place(0, 0.19, 0.04, -Math.PI / 2 - 0.3, -0.02, 0)),
+    colored(puff({ length: 0.3, root: 0.04, tip: 0.12, thick: 0.014, notch: 0.09 }), RIBBON, place(0, 0.19, 0.04, -Math.PI / 2 + 0.34, -0.02, 0)),
+    // The knot: a squarish band the wings gather into.
+    colored(new RoundedBoxGeometry(0.15, 0.115, 0.17, 3, 0.045), RIBBON, at(0, 0.225, 0)),
   ])!;
   return { body: withInkHull(body), lid: withInkHull(lid) };
 }
