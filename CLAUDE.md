@@ -1,11 +1,11 @@
 # Pumpkin Paint Studio
 
-Interactive 3D pumpkin you can rotate and paint. Next.js (App Router) + TypeScript, react-three-fiber, zustand. Hosted on Pantheon from GitHub.
+Interactive 3D pumpkin you can rotate and paint. Next.js (App Router) + TypeScript, react-three-fiber, zustand. Hosted on GitHub Pages as a static export.
 
 ## Commands
 - `npm run dev` runs the app at http://localhost:3000
 - `npm run typecheck`, `npm run lint`, `npm test` (Vitest), `npm run test:e2e` (Playwright)
-- `npm run build` must pass before any push. Pantheon runs it on deploy.
+- `npm run build` must pass before any push. The Pages workflow runs it on every push to `main`.
 
 ## Layout
 - `app/` routes only. `components/scene/` 3D (client-only). `components/ui/` palette and toolbar.
@@ -24,6 +24,7 @@ Interactive 3D pumpkin you can rotate and paint. Next.js (App Router) + TypeScri
 - `?debug&seed=1` freezes animation and fixes the camera so Playwright screenshots are repeatable.
 - Headless Chromium needs software WebGL (SwiftShader).
 
-## Pantheon
-- Code comes from GitHub. Pushing deploys. Every PR gets a preview environment.
-- No SFTP mode. All changes go through git.
+## GitHub Pages
+- Static export (`output: "export"`) served from `/pumpkin-paint`; `.github/workflows/pages.yml` deploys on push to `main`.
+- No server code: no API routes, server actions or runtime-only Next features.
+- Reference assets with the base path in mind (don't hardcode `/foo.png`; production lives under `/pumpkin-paint/`).

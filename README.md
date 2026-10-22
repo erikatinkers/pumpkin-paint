@@ -12,7 +12,7 @@ npm run dev          # http://localhost:3000
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Dev server |
-| `npm run build` | Production build. Must pass before any push; Pantheon runs it on deploy |
+| `npm run build` | Production build. Static export to `out/`. Must pass before any push |
 | `npm run typecheck` / `npm run lint` | `tsc --noEmit` / ESLint |
 | `npm test` | Vitest unit tests (undo tiles, seam wrapping, pole stretch, stroke profile, detail map) |
 | `npm run test:e2e` | Playwright against `next dev`, using software WebGL (SwiftShader). First time: `npx playwright install chromium` |
