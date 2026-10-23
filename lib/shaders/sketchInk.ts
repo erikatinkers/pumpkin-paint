@@ -137,6 +137,8 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
         float weight = uPen * ( 0.9 + 0.3 * skNoise( fc * 0.02 ) );
 
         float penLine = 0.0; // the silhouette comes from the ink hull
+        float paintLine = 0.0; // the outline round each painted stroke, in a deep tone of that paint
+        vec3 paintInk = ink;
 
         if ( uIsBody > 0.5 ) {
           // Grooves between lobes: |sin| is 0 in each groove, so its derivative sets the line width.
@@ -147,13 +149,18 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
           penLine = max( penLine, groove );
 
           // Paint edges: the height layer jumps where a stroke starts, so its slope marks the edge.
-          vec2 hp = vec2( 1.6 / 2048.0, 1.6 / 1024.0 ); // a fixed distance in UV, so a half-size touch texture draws the same line
+          vec2 hp = vec2( 1.4 / 2048.0, 1.4 / 1024.0 ); // a fixed distance in UV, so a half-size touch texture draws the same line
           float hx = texture2D( uHeight, skUv + vec2( hp.x, 0.0 ) ).x - texture2D( uHeight, skUv - vec2( hp.x, 0.0 ) ).x;
           float hy = texture2D( uHeight, skUv + vec2( 0.0, hp.y ) ).x - texture2D( uHeight, skUv - vec2( 0.0, hp.y ) ).x;
           float edge = clamp( length( vec2( hx, hy ) ) * 4.0, 0.0, 1.0 );
-          penLine = max( penLine, smoothstep( 0.5, 0.9, edge ) );
+          paintLine = smoothstep( 0.42, 0.8, edge );
+          // The line takes its color from the stroke it surrounds: the slope points uphill, onto the paint, so look a little way that way and
+          // deepen what is there (a darker, richer version of the same paint) instead of drawing in black.
+          #ifdef USE_MAP
+            vec3 onPaint = texture2D( map, skUv + normalize( vec2( hx, hy ) + 1e-6 ) * hp * 2.5 ).rgb;
+            paintInk = pow( clamp( onPaint, 0.0, 1.0 ), vec3( 1.7 ) ) * 0.4;
+          #endif
         }
-
 
         if ( uKind > 0.5 && vHull < 0.5 ) {
           float breakUp = smoothstep( 0.15, 0.45, skNoise( vObj.xy * 38.0 + vObj.z * 21.0 ) );
@@ -166,6 +173,7 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
           penLine = max( penLine, marks );
         }
 
+        col = mix( col, paintInk, paintLine );
         col = mix( col, ink, penLine );
         col *= 1.0 - 0.04 * tooth; // paper tooth, over everything
         outgoingLight = col;
