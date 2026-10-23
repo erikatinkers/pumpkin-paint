@@ -180,16 +180,24 @@ input[type="range"]:focus-visible { outline: 3px dashed var(--ink); outline-offs
   .rail {
     top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; width: auto; max-height: none;
   }
-  .rail .window-body { flex-direction: row; padding: 10px 14px 18px 10px; gap: 8px; overflow: visible; }
+  /* One row of icon-only keys: the three tools, then the four actions. The labels stay in the page for screen readers. */
+  .rail .window-body { flex-direction: row; padding: 10px 14px 18px 10px; gap: 10px; overflow: visible; }
   .rail .keys { display: flex; gap: 6px; }
   .rail .keys:first-child { flex: 3; }
-  .rail .keys:last-child { flex: 3; }
-  .rail .key { flex: 1; min-width: 0; width: auto; font-size: 9px; letter-spacing: 0; gap: 3px; }
+  .rail .keys:last-child { flex: 4; }
+  .rail .key { flex: 1; width: auto; min-width: 0; aspect-ratio: auto; height: 46px; }
   .rail .key-icon svg { width: 24px; height: 24px; }
-  .panel { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; width: auto; max-height: 38dvh; }
-  .panel .window-body { padding: 12px; gap: 10px; }
-  .well { padding: 12px; gap: 12px; }
-  .swatches { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .rail .key-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .panel { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; width: auto; max-height: min(46dvh, 420px); }
+  .panel .window-body { padding: 10px 12px 14px 10px; gap: 8px; }
+  .panel h2 { display: none; }
+  .well { padding: 10px; gap: 8px; }
+  .swatches { grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  /* Everything fits without scrolling: the custom picker and Size share one row under the swatches. */
+  .panel .tuning { display: flex; align-items: center; gap: 12px; }
+  .panel .tuning input[type="color"] { flex: none; width: 70px; height: 38px; }
+  .panel .tuning label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .panel .tuning label input[type="range"] { flex: 1; min-width: 0; }
 }
 
 /* Fingers need bigger targets, and nothing on the stage should select text or pop a callout. */
@@ -207,6 +215,7 @@ input[type="range"]:focus-visible { outline: 3px dashed var(--ink); outline-offs
 /* The pointer shows the tool: a paintbrush or an eraser (hot spot at the tip / corner that touches the pumpkin), a hand to turn. */
 .stage[data-tool="paint"], .stage[data-tool="paint"] canvas { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path d='M3.5 28.5c0-3.2 1.6-5 4.3-5l2 2c0 2.7-1.8 4.3-4.8 4.3z' fill='%23f08a2e' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M9.8 23.5 24.5 8.8l3.2 3.2-14.7 14.7z' fill='%23fffdf7' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M24.5 8.8l2.4-2.4a2.3 2.3 0 0 1 3.2 3.2L27.7 12z' fill='%238795db' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/></svg>") 4 28, crosshair; }
 .stage[data-tool="erase"], .stage[data-tool="erase"] canvas { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path d='M4 21.5 17 8.5l9 9L15 28.5H9z' fill='%23f2a0b4' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M17 8.5l4.5-4.5 8 8-3.5 5.5z' fill='%238795db' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round'/><path d='M6 28.5h10' stroke='%232a1d1a' stroke-width='2' stroke-linecap='round'/></svg>") 6 27, crosshair; }
+.stage[data-tool="pick"], .stage[data-tool="pick"] canvas { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g transform='rotate(45 16 16)' fill='%23fffdf7' stroke='%232a1d1a' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'><path d='M12.5 9.5V6a3.5 3.5 0 0 1 7 0v3.5z' fill='%238795db'/><path d='M10.5 11.5h11'/><path d='M12.5 11.5v12l3.5 5 3.5-5v-12z'/></g></svg>") 7 25, crosshair; }
 .stage[data-tool="turn"], .stage[data-tool="turn"] canvas { cursor: grab; }
 .stage[data-tool="turn"] canvas:active { cursor: grabbing; }
 
@@ -263,7 +272,6 @@ input[type="range"]:focus-visible { outline: 3px dashed var(--ink); outline-offs
   .cam-bottom .cam-exit { left: 16px; width: 78px; height: 40px; margin-top: -20px; }
   .cam-hint { display: none; }
   .polaroid { width: 110px; right: calc(var(--side) + 12px); }
-  .rail .keys:first-child { flex: 4; }
 }
 @media (max-width: 760px) and (max-height: 520px) { .cam { --bottom: 96px; } }
 

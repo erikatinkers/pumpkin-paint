@@ -28,15 +28,15 @@ export default function Palette() {
           ))}
         </div>
         <p>{colorName} <small>{color.toUpperCase()}</small></p>
+      </div>
+
+      <div className="well tuning">
         <input
           type="color"
           aria-label="Custom color"
           value={color}
           onChange={(e) => setColor(e.target.value, "Custom")}
         />
-      </div>
-
-      <div className="well">
         <label>Size {size}
           <input type="range" min={6} max={80} value={size} style={fill(((size - 6) / 74) * 100)} onChange={(e) => setSize(+e.target.value)} />
         </label>
