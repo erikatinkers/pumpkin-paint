@@ -68,6 +68,13 @@ test("the painting is saved as you go and comes back after a reload", async ({ p
   await expect(button(page, "Undo")).toBeDisabled(); // the strokes come back as pixels, not as undo steps
 });
 
+test("on a computer, Capture downloads the photo", async ({ page }) => {
+  await openStudio(page);
+  await button(page, "Capture").click();
+  const [download] = await Promise.all([page.waitForEvent("download"), page.locator(".shutter").click()]);
+  expect(download.suggestedFilename()).toBe("my-pumpkin.png");
+});
+
 test("a mouse drag on the pumpkin paints; a drag on the backdrop does not", async ({ page }) => {
   await openStudio(page);
   const box = (await canvas(page).boundingBox())!;

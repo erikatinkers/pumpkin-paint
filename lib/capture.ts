@@ -26,3 +26,38 @@ export function takePhoto(rect: DOMRect): string | null {
   ctx.drawImage(source, (rect.left - box.left) * sx, (rect.top - box.top) * sy, out.width, out.height, 0, 0, out.width, out.height);
   return out.toDataURL("image/png");
 }
+
+/**
+ * The PNG data URL as a File, built straight away: a share sheet has to be opened from inside the tap that asked for it, so there is no room to wait
+ * for `toBlob`.
+ */
+export function dataUrlToFile(url: string, name: string): File {
+  const comma = url.indexOf(",");
+  const type = /^data:([^;,]+)/.exec(url.slice(0, comma))?.[1] ?? "image/png";
+  const binary = atob(url.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], name, { type });
+}
+
+/** `share`: the phone's share sheet (which can save to Photos). `preview`: show the photo big to press and hold. `download`: a plain file download. */
+export type SaveRoute = "share" | "preview" | "download";
+
+/**
+ * How a photo gets to the person. A download goes to the Files app on a phone, where people don't look for pictures, so touch devices use the share sheet
+ * (its Save Image goes to Photos), or, if the browser cannot share files, a big preview that can be pressed and held. Computers just download.
+ */
+export function chooseSaveRoute(env: { touch: boolean; canShareFiles: boolean }): SaveRoute {
+  if (!env.touch) return "download";
+  return env.canShareFiles ? "share" : "preview";
+}
+
+/** A phone or tablet (an iPad in desktop mode says it is a Mac, but has a touch screen). */
+export function isTouchDevice(): boolean {
+  return window.matchMedia("(pointer: coarse)").matches || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+}
+
+/** Whether this browser can hand a file to the share sheet. */
+export function canShareFile(file: File): boolean {
+  return typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] });
+}

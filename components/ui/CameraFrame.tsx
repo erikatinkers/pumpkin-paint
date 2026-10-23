@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { takePhoto } from "@/lib/capture";
+import { canShareFile, chooseSaveRoute, dataUrlToFile, isTouchDevice, takePhoto } from "@/lib/capture";
 import { sound } from "@/lib/sound";
 import { useBrush } from "@/lib/store";
 import { CameraIcon } from "./icons";
@@ -18,6 +18,8 @@ export default function CameraFrame() {
   const hole = useRef<HTMLDivElement>(null);
   const [flash, setFlash] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
+  /** The photo shown big to press and hold, for a phone whose browser cannot open the share sheet. */
+  const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -42,10 +44,23 @@ export default function CameraFrame() {
     setFlash(true);
     setTimeout(() => setFlash(false), FLASH_MS);
     setPhoto(url);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "my-pumpkin.png";
-    a.click();
+
+    const file = dataUrlToFile(url, "my-pumpkin.png");
+    const route = chooseSaveRoute({ touch: isTouchDevice(), canShareFiles: canShareFile(file) });
+    if (route === "share") {
+      // Called straight from the tap, as browsers insist. Closing the sheet without choosing is not an error; a real failure falls back to the preview.
+      navigator.share({ files: [file], title: "My pumpkin" }).catch((e: unknown) => {
+        const name = e instanceof Error ? e.name : "";
+        if (name !== "AbortError" && name !== "InvalidStateError") setPreview(url);
+      });
+    } else if (route === "preview") {
+      setPreview(url);
+    } else {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "my-pumpkin.png";
+      a.click();
+    }
   }
 
   return (
@@ -73,7 +88,17 @@ export default function CameraFrame() {
       {flash && <div className="cam-flash" />}
       {photo && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="polaroid" src={photo} alt="Your photo, saved to downloads" />
+        <img className="polaroid" src={photo} alt="Your photo" />
+      )}
+      {preview && (
+        <div className="save-sheet" role="dialog" aria-label="Save your photo">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="Your photo" />
+          <p>Press and hold the picture, then choose Save to Photos.</p>
+          <button className="key" onClick={() => setPreview(null)}>
+            <span className="key-label">Done</span>
+          </button>
+        </div>
       )}
     </div>
   );
