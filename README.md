@@ -4,15 +4,21 @@ An interactive 3D pumpkin you can turn and paint in your browser, drawn in a han
 
 **Live demo: https://erikatinkers.github.io/pumpkin-paint/**
 
+
 ## Features
 
 - **Paint** with watercolors straight onto the pumpkin: pick a color, set the brush size, and paint with a raised, puffy feel and a matte-to-satin sheen.
 - **Tools:** paint, erase, turn, undo/redo, and clear.
-- **Surprise me:** open the gift box and the pumpkin paints itself one of 10 designs (checkerboard, daisies, gingham, sugar skull, three cats, jack-o'-lantern, a web mask, and a monster).
+- **Surprise me:** open the gift box and see what happens!
 - **Capture** a picture of your pumpkin.
 - **Touch-friendly:** one finger paints on the pumpkin and turns it when you drag the background, and two fingers pinch-zoom.
 
-Built with Next.js (App Router), TypeScript, react-three-fiber, drei and zustand. Surprise designs are small "recipes" in `lib/painting/surprise/`: add one with a single file and one line in the list.
+## Built with
+- Next.js (App Router)
+- TypeScript
+- react-three-fiber
+- drei
+- zustand
 
 ## Run it locally
 
