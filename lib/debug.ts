@@ -14,8 +14,11 @@ export function parseDebug(search: string): DebugOptions {
   return { enabled, seed: whole(params.get("seed")), confirmMs: enabled ? whole(params.get("confirm")) : null };
 }
 
-/** Camera used in debug mode, in spherical coordinates around the origin. Matches the default view. */
-export const FIXED_CAMERA = { azimuth: 0.0867, polar: 1.2535, distance: 14.3 };
+/**
+ * Camera used in debug mode, in spherical coordinates around the origin. Matches the default view: the distance is where `CameraFit` puts the camera
+ * for a 1280x800 window (the size the e2e screenshots use), so the baselines frame the pumpkin the way a visitor sees it.
+ */
+export const FIXED_CAMERA = { azimuth: 0.0867, polar: 1.2535, distance: 19 };
 
 let settled = false;
 

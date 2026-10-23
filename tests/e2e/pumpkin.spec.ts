@@ -4,7 +4,7 @@ import { HIDE_UI_CSS, WAVE, button, canvas, devBadge, expectNoErrors, nextFrames
 test("renders the bare pumpkin within the draw-call budget", async ({ page }) => {
   const errors = await openStudio(page);
   const stats = await page.evaluate(() => window.__pumpkin!.stats());
-  expect(stats.drawCalls).toBe(6); // pumpkin + stem + shadow plane, plus the top page, the ground shadows and the notebook body with its loose things
+  expect(stats.drawCalls).toBe(8); // pumpkin + stem + shadow plane, plus the top page, the ground shadows, the notebook body with its loose things, and the gift box's body and lid (the phone view crops the box out, so mobile.spec counts 6)
   expect(stats.textureWidth).toBe(2048);
   expect(stats.textureHeight).toBe(1024);
   await expect(canvas(page)).toHaveScreenshot("bare.png", { mask: [devBadge(page)], stylePath: HIDE_UI_CSS });
