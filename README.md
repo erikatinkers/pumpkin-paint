@@ -4,6 +4,10 @@ An interactive 3D pumpkin you can turn and paint in your browser, drawn in a han
 
 **Live demo: https://erikatinkers.github.io/pumpkin-paint/**
 
+<img width="1703" height="863" alt="Screenshot 2026-10-22 at 10 45 31 PM" src="https://github.com/user-attachments/assets/a578a495-b033-4134-a3ae-1bc4de326f57" />
+<img width="1697" height="856" alt="Screenshot 2026-10-22 at 11 08 22 PM" src="https://github.com/user-attachments/assets/798fa346-0f72-4902-bb4b-7c113b5f0a91" />
+
+
 
 ## Features
 
