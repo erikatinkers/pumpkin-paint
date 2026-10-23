@@ -127,29 +127,53 @@ function sprig(u: number, v: number, angle: number, rng: Rng): Stroke[] {
   return out;
 }
 
+interface DaisyLayout {
+  cols: number;
+  rows: number;
+  /** The chance a grid spot is left empty. */
+  gaps: number;
+  /** Flower scale, low to high. */
+  size: [number, number];
+  /** The v the rows span: bottom, then top. */
+  span: [number, number];
+  /** A faint green stem and leaves beside most flowers. */
+  sprigs: boolean;
+}
+
+const SPARSE_DAISIES: DaisyLayout = { cols: 5, rows: 3, gaps: 0.2, size: [0.75, 1.15], span: [0.2, 0.82], sprigs: true };
+const DENSE_DAISIES: DaisyLayout = { cols: 8, rows: 5, gaps: 0.08, size: [0.55, 0.85], span: [0.12, 0.9], sprigs: false };
+
+/** White daisies scattered over the pumpkin on a loose grid, each pushed around its spot so they don't line up. */
+function daisyField(rng: Rng, { cols, rows, gaps, size, span, sprigs }: DaisyLayout): Stroke[] {
+  const out: Stroke[] = [];
+  const flowers: [number, number, number][] = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (rng() < gaps) continue;
+      const u = (c + 0.5 + range(rng, -0.3, 0.3) + (r % 2 ? 0.5 : 0)) / cols;
+      const v = span[0] + ((r + 0.5) / rows) * (span[1] - span[0]) + range(rng, -0.05, 0.05);
+      flowers.push([u, v, range(rng, size[0], size[1])]);
+    }
+  }
+  if (sprigs) for (const [u, v] of flowers) if (rng() < 0.6) out.push(...sprig(u + range(rng, 0.05, 0.09), v + range(rng, -0.04, 0.04), range(rng, 0, Math.PI * 2), rng));
+  for (const [u, v, scale] of flowers) out.push(...daisy(u, v, scale, rng));
+  return out;
+}
+
 /** A muted washed pumpkin with white daisies scattered over it. */
 const daisies: Recipe = {
   name: "Daisies",
   strokes(rng: Rng) {
     const base = pick(rng, DAISY_BASES);
+    return [...wash(rng, base), ...daisyField(rng, SPARSE_DAISIES)];
+  },
+};
 
-    const out: Stroke[] = wash(rng, base);
-
-    // Flowers on a loose grid, each pushed around so they scatter instead of lining up.
-    const flowers: [number, number, number][] = [];
-    const cols = 5;
-    const rows = 3;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (rng() < 0.2) continue;
-        const u = (c + 0.5 + range(rng, -0.3, 0.3) + (r % 2 ? 0.5 : 0)) / cols;
-        const v = 0.2 + ((r + 0.5) / rows) * 0.62 + range(rng, -0.05, 0.05);
-        flowers.push([u, v, range(rng, 0.75, 1.15)]);
-      }
-    }
-    for (const [u, v] of flowers) if (rng() < 0.6) out.push(...sprig(u + range(rng, 0.05, 0.09), v + range(rng, -0.04, 0.04), range(rng, 0, Math.PI * 2), rng));
-    for (const [u, v, size] of flowers) out.push(...daisy(u, v, size, rng));
-    return out;
+/** Just the daisies, a lot of them, on the pumpkin's own orange skin: no wash and no sprigs. */
+const pumpkinDaisies: Recipe = {
+  name: "Pumpkin daisies",
+  strokes(rng: Rng) {
+    return daisyField(rng, DENSE_DAISIES);
   },
 };
 
@@ -190,4 +214,4 @@ const gingham: Recipe = {
   },
 };
 
-export const RECIPES: Recipe[] = [checkerboard, daisies, gingham, skull, cat, kitty, nightcat, jack, spidey, frank];
+export const RECIPES: Recipe[] = [checkerboard, daisies, pumpkinDaisies, gingham, skull, cat, kitty, nightcat, jack, spidey, frank];
