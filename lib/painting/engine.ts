@@ -58,6 +58,9 @@ export class PaintEngine {
   private readonly stamps = new Map<string, HTMLCanvasElement>();
   private stroking = false;
   private dirtyListener: (() => void) | null = null;
+  private changeListener: (() => void) | null = null;
+  /** How many edits (strokes, undo, redo, clear) have been made, so a late restore can tell it would overwrite new work. */
+  private edits = 0;
   private historyListener: ((canUndo: boolean, canRedo: boolean) => void) | null = null;
 
   constructor(opts: EngineOptions) {
@@ -112,6 +115,41 @@ export class PaintEngine {
     this.dirtyListener = fn;
   }
 
+  /** Called after each edit is finished (a stroke ends, undo, redo, clear), so the painting can be saved. */
+  setChangeListener(fn: (() => void) | null): void {
+    this.changeListener = fn;
+  }
+
+  /** The color and roughness layers as PNGs, for saving. (The height layer is not saved: nothing reads it for display.) */
+  async snapshot(): Promise<{ color: Blob; roughness: Blob; width: number; height: number }> {
+    const png = (ctx: CanvasRenderingContext2D) =>
+      new Promise<Blob>((resolve, reject) => ctx.canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("could not encode the paint"))), "image/png"));
+    const [color, roughness] = await Promise.all([png(this.colorCtx), png(this.roughCtx)]);
+    return { color, roughness, width: this.width, height: this.height };
+  }
+
+  /**
+   * Puts a saved painting back (scaled if it was saved at another texture size). It is not an undo step. Returns false, changing nothing,
+   * if any edit has been made since the engine started: new work wins over an old save.
+   */
+  async restore(color: Blob, roughness: Blob): Promise<boolean> {
+    const [c, r] = await Promise.all([createImageBitmap(color), createImageBitmap(roughness)]);
+    try {
+      if (this.edits > 0) return false;
+      this.colorCtx.drawImage(c, 0, 0, this.width, this.height);
+      this.roughCtx.drawImage(r, 0, 0, this.width, this.height);
+      this.markDirty(0, 0, this.width, this.height);
+      return true;
+    } finally {
+      c.close();
+      r.close();
+    }
+  }
+
+  private changed(): void {
+    this.changeListener?.();
+  }
+
   /** Queue a changed pixel rect for GPU upload and wake the render loop. */
   private markDirty(x: number, y: number, w: number, h: number): void {
     for (const m of this.mirrors) m.mark(x, y, w, h);
@@ -134,6 +172,7 @@ export class PaintEngine {
     if (this.stroking) this.endStroke();
     this.stroking = true;
     this.lastDab = null;
+    this.edits++;
     this.history.begin();
   }
 
@@ -163,6 +202,7 @@ export class PaintEngine {
     this.stroking = false;
     this.lastDab = null;
     this.history.commit();
+    this.changed();
   }
 
   /** Abort the stroke in progress (e.g. a second finger landed) and restore what it touched. */
@@ -174,11 +214,15 @@ export class PaintEngine {
   }
 
   undo(): void {
+    this.edits++;
     this.repaint(this.history.undo());
+    this.changed();
   }
 
   redo(): void {
+    this.edits++;
     this.repaint(this.history.redo());
+    this.changed();
   }
 
   /**
@@ -197,6 +241,8 @@ export class PaintEngine {
     this.lastDab = null;
     this.history.clear();
     this.resetLayers();
+    this.edits++;
+    this.changed();
   }
 
   private repaint(rects: Rect[] | null): void {

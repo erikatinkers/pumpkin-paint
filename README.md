@@ -14,6 +14,7 @@ An interactive 3D pumpkin you can turn and paint in your browser, drawn in a han
 - **Paint** with watercolors straight onto the pumpkin: pick a color, set the brush size, and paint with a raised, puffy feel and a matte-to-satin sheen.
 - **Tools:** paint, erase, turn, undo/redo, and clear.
 - **Surprise me:** open the gift box and see what happens!
+- **Autosave:** your painting is kept in your browser and is there when you come back (it stays on that device and browser; the undo history is not kept).
 - **Capture** a picture of your pumpkin.
 - **Touch-friendly:** one finger paints on the pumpkin and turns it when you drag the background, and two fingers pinch-zoom.
 

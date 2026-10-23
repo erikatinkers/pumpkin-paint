@@ -5,13 +5,15 @@ export interface DebugOptions {
   seed: number | null;
   /** `?confirm=MS` (debug only): how long Clear stays armed. Lets slow software-GL tests outlast the usual 3 seconds. */
   confirmMs: number | null;
+  /** `?persist` (debug only): keep saving and restoring the painting, which debug mode otherwise leaves off so every run starts bare. */
+  persist: boolean;
 }
 
 export function parseDebug(search: string): DebugOptions {
   const params = new URLSearchParams(search);
   const whole = (raw: string | null) => (raw !== null && /^\d+$/.test(raw) ? Number(raw) : null);
   const enabled = params.has("debug");
-  return { enabled, seed: whole(params.get("seed")), confirmMs: enabled ? whole(params.get("confirm")) : null };
+  return { enabled, seed: whole(params.get("seed")), confirmMs: enabled ? whole(params.get("confirm")) : null, persist: enabled && params.has("persist") };
 }
 
 /**

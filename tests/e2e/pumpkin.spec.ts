@@ -28,6 +28,46 @@ test("paints a stroke through the dev hook; undo and redo restore exact pixels",
   await expectNoErrors(errors);
 });
 
+test("the painting is saved as you go and comes back after a reload", async ({ page }) => {
+  await openStudio(page, "&persist"); // debug mode leaves saving off unless asked
+  const bare = await shot(page);
+  await page.evaluate((pts) => window.__pumpkin!.paintStroke(pts), WAVE);
+  const painted = await shot(page);
+  expect(painted.equals(bare)).toBe(false);
+
+  // Saving waits a moment after the last edit; look in the browser's storage until the record is there.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            new Promise<boolean>((resolve) => {
+              const open = indexedDB.open("pumpkin-paint", 1);
+              open.onerror = () => resolve(false);
+              open.onsuccess = () => {
+                try {
+                  const get = open.result.transaction("paint").objectStore("paint").get("current");
+                  get.onsuccess = () => {
+                    open.result.close();
+                    resolve(Boolean(get.result));
+                  };
+                  get.onerror = () => resolve(false);
+                } catch {
+                  resolve(false);
+                }
+              };
+            }),
+        ),
+      { timeout: 20_000, intervals: [250] },
+    )
+    .toBe(true);
+
+  await page.reload();
+  await page.waitForFunction(() => window.__pumpkin?.settled());
+  await expect.poll(async () => (await shot(page)).equals(painted), { timeout: 20_000 }).toBe(true);
+  await expect(button(page, "Undo")).toBeDisabled(); // the strokes come back as pixels, not as undo steps
+});
+
 test("a mouse drag on the pumpkin paints; a drag on the backdrop does not", async ({ page }) => {
   await openStudio(page);
   const box = (await canvas(page).boundingBox())!;

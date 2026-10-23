@@ -3,10 +3,10 @@ import { parseDebug } from "@/lib/debug";
 
 describe("debug query", () => {
   it("is off by default", () => {
-    expect(parseDebug("")).toEqual({ enabled: false, seed: null, confirmMs: null });
+    expect(parseDebug("")).toEqual({ enabled: false, seed: null, confirmMs: null, persist: false });
   });
   it("reads ?debug&seed=1", () => {
-    expect(parseDebug("?debug&seed=1")).toEqual({ enabled: true, seed: 1, confirmMs: null });
+    expect(parseDebug("?debug&seed=1")).toEqual({ enabled: true, seed: 1, confirmMs: null, persist: false });
   });
   it("ignores a seed that is not a whole number", () => {
     expect(parseDebug("?debug&seed=abc").seed).toBeNull();
@@ -15,5 +15,9 @@ describe("debug query", () => {
   it("reads ?confirm only in debug mode", () => {
     expect(parseDebug("?debug&confirm=800").confirmMs).toBe(800);
     expect(parseDebug("?confirm=800").confirmMs).toBeNull();
+  });
+  it("reads ?persist only in debug mode", () => {
+    expect(parseDebug("?debug&persist").persist).toBe(true);
+    expect(parseDebug("?persist").persist).toBe(false);
   });
 });

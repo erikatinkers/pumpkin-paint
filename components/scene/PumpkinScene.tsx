@@ -12,6 +12,7 @@ import { captureRegistry } from "@/lib/capture";
 import CameraFit, { FixedCamera } from "./CameraFit";
 import DevHook from "./DevHook";
 import PaintInteraction from "./PaintInteraction";
+import PaintPersistence from "./PaintPersistence";
 import Pumpkin, { PUMPKIN_COLOR } from "./Pumpkin";
 
 /** The loop renders on demand, so give async setup (environment map, first texture uploads) a few frames to land. */
@@ -90,6 +91,7 @@ export default function PumpkinScene() {
         maxPolarAngle={Math.PI * 0.53}
       />
       <PaintInteraction engine={engine} />
+      <PaintPersistence engine={engine} />
       {process.env.NODE_ENV !== "production" && <DevHook engine={engine} />}
     </Canvas>
   );
