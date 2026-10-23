@@ -73,9 +73,23 @@ test("the Erase tool takes paint off, and undo puts it back", async ({ page }) =
   expect((await shot(page)).equals(painted)).toBe(true);
 });
 
-test("the Turn tool never paints", async ({ page }) => {
+test("the Pick tool takes up the color under the pointer, then hands back to Paint", async ({ page }) => {
   await openStudio(page);
-  await button(page, "Turn").click();
+  const box = (await canvas(page).boundingBox())!;
+  await expect(page.locator(".panel p")).toContainText("Coral");
+
+  await button(page, "Pick").click();
+  await expect(button(page, "Pick")).toHaveAttribute("aria-pressed", "true");
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2); // bare skin: not one of the twelve watercolors
+  await expect(page.locator(".panel p")).toContainText("Picked");
+  await expect(button(page, "Paint")).toHaveAttribute("aria-pressed", "true");
+  await expect(button(page, "Undo")).toBeDisabled(); // picking never changes the painting
+});
+
+test("with no paint tool (the color window closed), a drag on the pumpkin turns it and never paints", async ({ page }) => {
+  await openStudio(page);
+  await page.getByRole("button", { name: "Close Paint palette" }).click();
+  await expect(button(page, "Paint")).toHaveAttribute("aria-pressed", "false");
   const box = (await canvas(page).boundingBox())!;
   const before = await shot(page);
   await page.mouse.move(box.x + box.width / 2 - 60, box.y + box.height / 2);

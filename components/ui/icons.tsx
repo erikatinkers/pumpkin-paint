@@ -15,18 +15,23 @@ export const PaintIcon = () => (
   </Icon>
 );
 
+/** An eyedropper: rubber bulb, collar and glass tube, standing up and then tilted so the tip points down-left. */
+export const PickIcon = () => (
+  <Icon>
+    <g transform="translate(0 1.4) rotate(45 12 10.4)">
+      <path d="M9.6 5.8V3a2.4 2.4 0 0 1 4.8 0v2.8z" />
+      <path d="M8.2 7.4h7.6" />
+      <path d="M10 7.4v9.2l2 3.9 2-3.9V7.4" />
+      <path d="M10 13h4" />
+    </g>
+  </Icon>
+);
+
 export const EraseIcon = () => (
   <Icon>
     <path d="M9.4 19.6H20" />
     <path d="M13.2 5.2l6.2 6.2a1.8 1.8 0 0 1 0 2.5l-5.7 5.7H9.4L4.6 14.8a1.8 1.8 0 0 1 0-2.5l6.1-6.1a1.8 1.8 0 0 1 2.5 0z" />
     <path d="M8.2 9.6l6.6 6.6" />
-  </Icon>
-);
-
-export const TurnIcon = () => (
-  <Icon>
-    <path d="M19.2 12.2a7.2 7.2 0 1 1-2.3-5.3" />
-    <path d="M19.4 4.6v4.4h-4.4" />
   </Icon>
 );
 

@@ -16,7 +16,7 @@ Interactive 3D pumpkin you can rotate and paint. Next.js (App Router) + TypeScri
 - Painting renders into canvas textures in UV space (color, height, roughness). Keep texture size at 2048x1024 on desktop and on high-density (2x and up) touch screens, 1024x512 on low-density touch. Smaller looks blurry on a phone.
 - Dispose geometries, materials and textures you create outside R3F's own lifecycle.
 - Performance budget: 60fps on a mid-range phone. Max 1 pumpkin mesh + stem + shadow plane (3 draw calls).
-- Touch: one finger paints or turns depending on the tool, two fingers pinch-zoom. Test pointer events on a phone early.
+- Touch: one finger paints (or picks, or erases) on the pumpkin and turns it when the drag starts on the background; two fingers pinch-zoom. Test pointer events on a phone early.
 - No new dependency without a reason in the PR description.
 
 ## Testing the 3D scene

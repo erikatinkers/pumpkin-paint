@@ -15,7 +15,7 @@ export const PAINTS = [
   { name: "Stone", hex: "#9d958c" },
 ] as const;
 
-export type Tool = "paint" | "erase" | "turn";
+export type Tool = "paint" | "pick" | "erase" | "turn";
 
 interface BrushState {
   color: string;

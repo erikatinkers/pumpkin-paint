@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { parseDebug } from "@/lib/debug";
 import { paintRegistry } from "@/lib/painting/registry";
 import { cancelSurprise } from "@/lib/painting/surprise";
@@ -10,7 +10,8 @@ import { ClearIcon, RedoIcon, UndoIcon } from "./icons";
 const CONFIRM_MS = 3000;
 const confirmMs = () => parseDebug(window.location.search).confirmMs ?? CONFIRM_MS;
 
-export default function Toolbar() {
+/** The action keys: undo, redo and clear, after any `before` keys (the rail puts Capture first, so on a phone the tools and the actions get a row each). */
+export default function Toolbar({ before }: { before?: ReactNode }) {
   const canUndo = useBrush((s) => s.canUndo);
   const canRedo = useBrush((s) => s.canRedo);
   const [armed, setArmed] = useState(false);
@@ -35,7 +36,8 @@ export default function Toolbar() {
   }, []);
 
   return (
-    <div className="keys" role="group" aria-label="Edit">
+    <div className="keys" role="group" aria-label="Actions">
+      {before}
       <button className="key" disabled={!canUndo} onClick={() => { cancelSurprise(); paintRegistry.get()?.undo(); }}>
         <span className="key-icon"><UndoIcon /></span>
         <span className="key-label">Undo</span>

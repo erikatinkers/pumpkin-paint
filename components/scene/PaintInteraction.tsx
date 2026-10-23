@@ -6,7 +6,7 @@ import * as THREE from "three";
 import type { PaintEngine } from "@/lib/painting/engine";
 import { cancelSurprise } from "@/lib/painting/surprise";
 import { sound } from "@/lib/sound";
-import { type Tool, useBrush } from "@/lib/store";
+import { PAINTS, type Tool, useBrush } from "@/lib/store";
 
 const DRAWING_TOOLS: readonly Tool[] = ["paint", "erase"];
 
@@ -26,8 +26,10 @@ interface OrbitLike {
 /**
  * Routes pointer input between painting and orbiting.
  *  - Paint and Erase tools: a press that lands on the pumpkin paints (or erases); a press elsewhere falls through to OrbitControls.
- *  - Turn tool: never intercepts, so OrbitControls always rotates.
- *  - Touch: one finger paints or turns by tool; a second finger cancels the stroke and pinch-zooms.
+ *  - Pick tool: a press (or drag) on the pumpkin takes up the paint colour under it; letting go hands back to the Paint tool.
+ *  - Turn (no key: it is what you have after closing the color window or opening the camera): never intercepts, so OrbitControls always rotates.
+ *  - Whatever the tool, a press that misses the pumpkin falls through, so dragging the background turns it.
+ *  - Touch: one finger paints (or picks, or erases) on the pumpkin and turns it from the background; a second finger cancels the stroke and pinch-zooms.
  * Listeners sit in the capture phase on the canvas wrapper, so a paint press never reaches OrbitControls.
  */
 export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
@@ -51,7 +53,7 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
     const pointers = new Map<number, { x: number; y: number }>();
-    let mode: "idle" | "paint" | "pinch" = "idle";
+    let mode: "idle" | "paint" | "pick" | "pinch" = "idle";
     let paintId = -1;
     let pinchDist = 0;
     const uvAt = (clientX: number, clientY: number): THREE.Vector2 | null => {
@@ -61,6 +63,13 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
       ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
       return raycaster.intersectObject(body, false)[0]?.uv ?? null;
+    };
+
+    /** Loads the colour under a UV spot into the brush, under its watercolor's name if it is one of the twelve. */
+    const pickAt = (uv: THREE.Vector2) => {
+      const hex = engine.sampleColor(uv.x, uv.y);
+      const known = PAINTS.find((p) => p.hex === hex);
+      useBrush.getState().setColor(hex, known?.name ?? "Picked");
     };
 
     const twoFingerDistance = (): number => {
@@ -82,10 +91,23 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
         e.stopPropagation();
         return;
       }
-      if (mode !== "idle" || pointers.size !== 1 || !DRAWING_TOOLS.includes(useBrush.getState().tool)) return;
+      const tool = useBrush.getState().tool;
+      if (mode !== "idle" || pointers.size !== 1 || !(DRAWING_TOOLS.includes(tool) || tool === "pick")) return;
 
       const uv = uvAt(e.clientX, e.clientY);
       if (!uv) return; // missed the pumpkin: let OrbitControls rotate
+      if (tool === "pick") {
+        mode = "pick";
+        paintId = e.pointerId;
+        try {
+          host.setPointerCapture(e.pointerId);
+        } catch {
+          // Not a live pointer (e.g. a synthetic event); picking still works without capture.
+        }
+        pickAt(uv);
+        e.stopPropagation();
+        return;
+      }
       mode = "paint";
       paintId = e.pointerId;
       try {
@@ -111,6 +133,9 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
           if (uv) engine.strokeTo(uv.x, uv.y, brush);
           else engine.breakPath();
         }
+      } else if (mode === "pick" && e.pointerId === paintId) {
+        const uv = uvAt(e.clientX, e.clientY);
+        if (uv) pickAt(uv);
       } else if (mode === "pinch" && pointers.size >= 2 && controls) {
         const d = twoFingerDistance();
         if (pinchDist > 0 && d > 0) {
@@ -128,6 +153,9 @@ export default function PaintInteraction({ engine }: { engine: PaintEngine }) {
       if (mode === "paint" && e.pointerId === paintId) {
         engine.endStroke();
         mode = "idle";
+      } else if (mode === "pick" && e.pointerId === paintId) {
+        mode = "idle";
+        useBrush.getState().setTool("paint"); // picked: back to painting with it
       } else if (mode === "pinch" && pointers.size === 0) {
         mode = "idle";
       }

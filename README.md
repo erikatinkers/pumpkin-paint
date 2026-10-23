@@ -10,7 +10,7 @@ An interactive 3D pumpkin you can turn and paint in your browser, drawn in a han
 - **Tools:** paint, erase, turn, undo/redo, and clear.
 - **Surprise me:** open the gift box and the pumpkin paints itself one of 10 designs (checkerboard, daisies, gingham, sugar skull, three cats, jack-o'-lantern, a web mask, and a monster).
 - **Capture** a picture of your pumpkin.
-- **Touch-friendly:** one finger paints or turns depending on the tool, and two fingers pinch-zoom.
+- **Touch-friendly:** one finger paints on the pumpkin and turns it when you drag the background, and two fingers pinch-zoom.
 
 Built with Next.js (App Router), TypeScript, react-three-fiber, drei and zustand. Surprise designs are small "recipes" in `lib/painting/surprise/`: add one with a single file and one line in the list.
 

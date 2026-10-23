@@ -1,11 +1,11 @@
 "use client";
 
 import { useBrush } from "@/lib/store";
-import { CameraIcon, EraseIcon, PaintIcon, TurnIcon } from "./icons";
+import { CameraIcon, EraseIcon, PaintIcon, PickIcon } from "./icons";
 import Toolbar from "./Toolbar";
 import Window from "./Window";
 
-/** Left rail: what the pointer does (paint, erase or turn), then undo, redo and clear. */
+/** Left rail: what the pointer does on the pumpkin (paint, pick a color or erase), then the actions: capture, undo, redo and clear. There is no Turn key: a drag that starts off the pumpkin turns it. */
 export default function ToolRail() {
   const tool = useBrush((s) => s.tool);
   const setTool = useBrush((s) => s.setTool);
@@ -17,20 +17,23 @@ export default function ToolRail() {
           <span className="key-icon"><PaintIcon /></span>
           <span className="key-label">Paint</span>
         </button>
+        <button className="key" aria-pressed={tool === "pick"} onClick={() => setTool("pick")}>
+          <span className="key-icon"><PickIcon /></span>
+          <span className="key-label">Pick</span>
+        </button>
         <button className="key" aria-pressed={tool === "erase"} onClick={() => setTool("erase")}>
           <span className="key-icon"><EraseIcon /></span>
           <span className="key-label">Erase</span>
         </button>
-        <button className="key" aria-pressed={tool === "turn"} onClick={() => setTool("turn")}>
-          <span className="key-icon"><TurnIcon /></span>
-          <span className="key-label">Turn</span>
-        </button>
-        <button className="key" onClick={() => setCamera(true)}>
-          <span className="key-icon"><CameraIcon /></span>
-          <span className="key-label">Capture</span>
-        </button>
       </div>
-      <Toolbar />
+      <Toolbar
+        before={
+          <button className="key" onClick={() => setCamera(true)}>
+            <span className="key-icon"><CameraIcon /></span>
+            <span className="key-label">Capture</span>
+          </button>
+        }
+      />
     </Window>
   );
 }

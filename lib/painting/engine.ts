@@ -92,6 +92,15 @@ export class PaintEngine {
     this.resetLayers();
   }
 
+  /** The paint colour at a UV spot as hex: what a brush would lay down to match it. Bare skin gives the skin colour. */
+  sampleColor(u: number, v: number): string {
+    const p = uvToPixel(u, v, this.width, this.height);
+    const x = Math.min(this.width - 1, Math.max(0, Math.floor(p.x)));
+    const y = Math.min(this.height - 1, Math.max(0, Math.floor(p.y)));
+    const d = this.colorCtx.getImageData(x, y, 1, 1).data;
+    return `#${[d[0], d[1], d[2]].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+  }
+
   /** Subscribe to undo/redo availability. Called once immediately with the current state. */
   setHistoryListener(fn: ((canUndo: boolean, canRedo: boolean) => void) | null): void {
     this.historyListener = fn;
