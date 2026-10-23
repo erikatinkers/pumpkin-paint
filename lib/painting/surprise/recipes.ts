@@ -132,28 +132,45 @@ interface DaisyLayout {
   rows: number;
   /** The chance a grid spot is left empty. */
   gaps: number;
-  /** Flower scale, low to high. */
+  /** Flower scale, low to high. Above 1, `skew` makes small flowers more common than big ones. */
   size: [number, number];
+  skew: number;
   /** The v the rows span: bottom, then top. */
   span: [number, number];
   /** A faint green stem and leaves beside most flowers. */
   sprigs: boolean;
+  /** When set, no flower may come closer to another than this fraction of their two radii: the biggest are placed first and any that would crowd are dropped. */
+  clearance?: number;
 }
 
-const SPARSE_DAISIES: DaisyLayout = { cols: 5, rows: 3, gaps: 0.2, size: [0.75, 1.15], span: [0.2, 0.82], sprigs: true };
-const DENSE_DAISIES: DaisyLayout = { cols: 8, rows: 5, gaps: 0.08, size: [0.55, 0.85], span: [0.12, 0.9], sprigs: false };
+const SPARSE_DAISIES: DaisyLayout = { cols: 5, rows: 3, gaps: 0.2, size: [0.75, 1.15], skew: 1, span: [0.2, 0.82], sprigs: true };
+const SCATTERED_DAISIES: DaisyLayout = { cols: 8, rows: 5, gaps: 0.1, size: [0.45, 1.3], skew: 1.5, span: [0.12, 0.9], sprigs: false, clearance: 0.9 };
+const DAISY_RADIUS = 90; // px, of a daisy at size 1 (its petals reach 74 to 98)
 
 /** White daisies scattered over the pumpkin on a loose grid, each pushed around its spot so they don't line up. */
-function daisyField(rng: Rng, { cols, rows, gaps, size, span, sprigs }: DaisyLayout): Stroke[] {
+function daisyField(rng: Rng, { cols, rows, gaps, size, skew, span, sprigs, clearance }: DaisyLayout): Stroke[] {
   const out: Stroke[] = [];
-  const flowers: [number, number, number][] = [];
+  let flowers: [number, number, number][] = [];
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (rng() < gaps) continue;
       const u = (c + 0.5 + range(rng, -0.3, 0.3) + (r % 2 ? 0.5 : 0)) / cols;
       const v = span[0] + ((r + 0.5) / rows) * (span[1] - span[0]) + range(rng, -0.05, 0.05);
-      flowers.push([u, v, range(rng, size[0], size[1])]);
+      flowers.push([u, v, size[0] + (size[1] - size[0]) * Math.pow(rng(), skew)]);
     }
+  }
+  if (clearance !== undefined) {
+    const kept: [number, number, number][] = [];
+    for (const f of flowers.sort((a, b) => b[2] - a[2])) {
+      const crowds = kept.some((k) => {
+        const du = Math.abs(f[0] - k[0]) % 1;
+        const dx = (Math.min(du, 1 - du) * TEX_W) / pinch((f[1] + k[1]) / 2);
+        const dy = (f[1] - k[1]) * TEX_H;
+        return Math.hypot(dx, dy) < (f[2] + k[2]) * DAISY_RADIUS * clearance;
+      });
+      if (!crowds) kept.push(f);
+    }
+    flowers = kept;
   }
   if (sprigs) for (const [u, v] of flowers) if (rng() < 0.6) out.push(...sprig(u + range(rng, 0.05, 0.09), v + range(rng, -0.04, 0.04), range(rng, 0, Math.PI * 2), rng));
   for (const [u, v, scale] of flowers) out.push(...daisy(u, v, scale, rng));
@@ -169,11 +186,11 @@ const daisies: Recipe = {
   },
 };
 
-/** Just the daisies, a lot of them, on the pumpkin's own orange skin: no wash and no sprigs. */
+/** Just the daisies, in a mix of sizes with room between them, on the pumpkin's own orange skin: no wash and no sprigs. */
 const pumpkinDaisies: Recipe = {
   name: "Pumpkin daisies",
   strokes(rng: Rng) {
-    return daisyField(rng, DENSE_DAISIES);
+    return daisyField(rng, SCATTERED_DAISIES);
   },
 };
 
