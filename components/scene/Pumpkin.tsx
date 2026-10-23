@@ -78,7 +78,7 @@ export default function Pumpkin({ engine, detailSeed }: { engine: PaintEngine; d
   const bodyMat = useMemo(
     () =>
       createPaintedSketchMaterial(
-        { color: engine.colorTexture, height: engine.heightTexture },
+        { color: engine.colorTexture },
         { detail: parts.detail, plain },
       ),
     [engine, parts.detail, plain],

@@ -11,14 +11,14 @@ export function createSketchMaterial(color: string, detail: THREE.Texture, marks
   return mat;
 }
 
-/** Pumpkin skin: the paint color layer is the wash; the height layer only marks where strokes begin and end (for the pen). Textures are owned (and disposed) by the engine. */
+/** Pumpkin skin: the paint color layer is the wash, with no line round the paint. The texture is owned (and disposed) by the engine. */
 export function createPaintedSketchMaterial(
-  maps: { color: THREE.Texture; height: THREE.Texture },
+  maps: { color: THREE.Texture },
   /** Pass `plain: true` for the fallback: just the color map, no shader patch. */
   extras: { detail: THREE.Texture; plain?: boolean },
 ): THREE.MeshStandardMaterial {
   const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", map: maps.color, roughness: BASE_ROUGHNESS, metalness: 0 });
-  if (!extras.plain) addSketchInk(mat, extras.detail, { body: true, hull: true, height: maps.height });
+  if (!extras.plain) addSketchInk(mat, extras.detail, { body: true, hull: true });
   return mat;
 }
 

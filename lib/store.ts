@@ -21,7 +21,7 @@ interface BrushState {
   color: string;
   colorName: string;
   size: number; // dab radius in px of a 2048-wide paint texture
-  puffiness: number; // 0..1 → height amplitude; fixed, since the pen outline around strokes reads from it
+  puffiness: number; // 0..1 → height amplitude of each dab. The height layer is still painted, but nothing reads it now that paint has no outline
   sheen: number; // 0..1 → matte (roughness 0.95) to satin (0.62)
   tool: Tool;
   giftOpens: number; // counts openings of the gift box, so the box can play its animation

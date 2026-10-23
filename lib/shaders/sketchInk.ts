@@ -3,10 +3,8 @@ import { DETAIL_REPEAT } from "@/lib/painting/detail";
 import { RIBS } from "@/lib/pumpkinGeometry";
 
 export interface SketchInkOptions {
-  /** The pumpkin body: enables the groove lines and the paint-edge ink, which assume the pumpkin's UV layout and paint layers. */
+  /** The pumpkin body: enables the groove lines, which assume the pumpkin's UV layout. */
   body?: boolean;
-  /** Paint height layer (0 on bare skin). Its edges become pooled pigment and ink around each stroke. */
-  height?: THREE.Texture;
   /** Pen weight in pixels for the outline and groove lines. */
   pen?: number;
   /** The geometry carries an `aHull` flag (see `withInkHull`): hull vertices are inflated into an ink outline. Used for the stem. */
@@ -20,9 +18,9 @@ export interface SketchInkOptions {
 /**
  * Turns a MeshStandardMaterial into a pen-and-watercolor look by replacing its final lit color:
  *  - a flat wash with one hard-edged cool shadow shape, instead of smooth shading;
- *  - bold, even pen lines: the silhouette (an ink hull), the grooves between lobes, and around each painted stroke;
+ *  - bold, even pen lines: the silhouette (an ink hull) and the grooves between lobes (paint has no outline of its own);
  *  - faint pigment speckle and paper tooth.
- * Groove and stroke lines take their width from screen-space derivatives; the silhouette is an inflated ink hull. Only the first directional light is used.
+ * Groove lines take their width from screen-space derivatives; the silhouette is an inflated ink hull. Only the first directional light is used.
  */
 export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE.Texture, opts: SketchInkOptions = {}): void {
   const o = { body: false, pen: 4.4, hull: false, hullWidth: 0.001, ...opts };
@@ -33,7 +31,6 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
     prev?.call(material, shader, renderer);
     shader.uniforms.uDetail = { value: detail };
     shader.uniforms.uDetailRepeat = { value: new THREE.Vector2(...DETAIL_REPEAT) };
-    shader.uniforms.uHeight = { value: o.height ?? null };
     shader.uniforms.uPen = { value: o.pen };
     shader.uniforms.uIsBody = { value: o.body ? 1 : 0 };
     shader.uniforms.uHullWidth = { value: o.hullWidth };
@@ -59,7 +56,6 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
     const decls = /* glsl */ `
       uniform sampler2D uDetail;
       uniform vec2 uDetailRepeat;
-      uniform sampler2D uHeight;
       uniform float uPen;
       uniform float uIsBody;
       uniform float uKind;
@@ -137,8 +133,6 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
         float weight = uPen * ( 0.9 + 0.3 * skNoise( fc * 0.02 ) );
 
         float penLine = 0.0; // the silhouette comes from the ink hull
-        float paintLine = 0.0; // the outline round each painted stroke, in a deep tone of that paint
-        vec3 paintInk = ink;
 
         if ( uIsBody > 0.5 ) {
           // Grooves between lobes: |sin| is 0 in each groove, so its derivative sets the line width.
@@ -147,19 +141,6 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
           float poleFade = smoothstep( 0.05, 0.16, sin( 3.14159265 * skUv.y ) );
           float groove = ( 1.0 - smoothstep( lw * weight * 0.4, lw * weight * 0.85, lobe ) ) * poleFade;
           penLine = max( penLine, groove );
-
-          // Paint edges: the height layer jumps where a stroke starts, so its slope marks the edge.
-          vec2 hp = vec2( 1.4 / 2048.0, 1.4 / 1024.0 ); // a fixed distance in UV, so a half-size touch texture draws the same line
-          float hx = texture2D( uHeight, skUv + vec2( hp.x, 0.0 ) ).x - texture2D( uHeight, skUv - vec2( hp.x, 0.0 ) ).x;
-          float hy = texture2D( uHeight, skUv + vec2( 0.0, hp.y ) ).x - texture2D( uHeight, skUv - vec2( 0.0, hp.y ) ).x;
-          float edge = clamp( length( vec2( hx, hy ) ) * 4.0, 0.0, 1.0 );
-          paintLine = smoothstep( 0.42, 0.8, edge );
-          // The line takes its color from the stroke it surrounds: the slope points uphill, onto the paint, so look a little way that way and
-          // deepen what is there (a darker, richer version of the same paint) instead of drawing in black.
-          #ifdef USE_MAP
-            vec3 onPaint = texture2D( map, skUv + normalize( vec2( hx, hy ) + 1e-6 ) * hp * 2.5 ).rgb;
-            paintInk = pow( clamp( onPaint, 0.0, 1.0 ), vec3( 1.7 ) ) * 0.4;
-          #endif
         }
 
         if ( uKind > 0.5 && vHull < 0.5 ) {
@@ -173,7 +154,6 @@ export function addSketchInk(material: THREE.MeshStandardMaterial, detail: THREE
           penLine = max( penLine, marks );
         }
 
-        col = mix( col, paintInk, paintLine );
         col = mix( col, ink, penLine );
         col *= 1.0 - 0.04 * tooth; // paper tooth, over everything
         outgoingLight = col;

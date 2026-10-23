@@ -265,7 +265,7 @@ export class PaintEngine {
         ctx.fillStyle = gray(ring.value);
         this.disc(ctx, stamp.width / 2, stamp.height / 2, qx * ring.radius, qy * ring.radius);
       }
-      // Round off the ring steps and the wall: a soft edge reads better to the edge-detecting pen than a cliff.
+      // Round off the ring steps and the wall into a soft edge.
       const img = ctx.getImageData(0, 0, stamp.width, stamp.height);
       softenStamp(img.data, stamp.width, stamp.height, Math.max(1, Math.round(Math.min(qx, qy) / 9)));
       ctx.putImageData(img, 0, 0);
